@@ -14,13 +14,14 @@ typedef struct {
 } LabelData;
 
 /*
- * A label is a widget which contains text.
+ * Create a label widget. A label is a widget which contains text.
  *
  * x		The X coordinate of the left side of the label
  * y		The Y coordinate of the top of the label
  * width	The width of the label's drawing area
  * height	The height of the label's drawing area
  * text		The content of the label
+ * Returns a new Label widget
  */
 Widget *Label(int x, int y, int width, int height, const char *text);
 

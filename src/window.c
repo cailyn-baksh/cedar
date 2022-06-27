@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <graphx.h>
 #include <keypadc.h>
 
 #include "cedar.h"
@@ -11,6 +12,15 @@ void cedar_initWindow(Window *window) {
 	window->widgets.first = NULL;
 	window->widgets.last = NULL;
 	window->widgets.selected = NULL;
+
+	window->menu = NULL;
+
+	window->realTop = 0;
+	window->realLeft = 0;
+	window->projTop = 0;
+	window->projLeft = 0;
+	window->width = GFX_LCD_WIDTH;
+	window->height = GFX_LCD_HEIGHT;
 }
 
 void cedar_destroyWindow(Window *window) {
@@ -37,6 +47,11 @@ void cedar_addWidget(Window *window, Widget *widget) {
 		widget->prev = window->widgets.last;
 		window->widgets.last = widget;
 	}
+}
+
+void cedar_setMenu(Window *window, Menu *menu) {
+	window->menu = menu;
+	window->realTop = MENUBAR_HEIGHT;
 }
 
 // Previous state of the keyboard
@@ -85,9 +100,29 @@ int cedar_display(Window *window) {
 		// store current kb_Data for next check
 		memcpy(prevKbState, kb_Data, 8);
 
-		/* Paint widgets */
+		/* Paint */
+		if (window->menu != NULL) {
+			// Paint menu bar
+			gfx_HorizLine_NoClip(0, MENUBAR_HEIGHT, GFX_LCD_WIDTH);
+		}
+
+		// Paint widgets
 		for (Widget *widget = window->widgets.first; widget != NULL; widget = widget->next) {
-			widget->handler(widget, EVENT_PAINT);
+			if (widget->x >= window->projLeft
+				&& (widget->x + widget->width) <= (window->projLeft + window->width)
+				&& widget->y >= window->projTop
+				&& (widget->y + widget->height) <= (window->projTop + window->height)
+			) {
+				// Widget is visible
+
+				// Set the real coordinates
+				widget->realX = window->realLeft + (widget->x - window->projLeft);
+				widget->realY = window->realTop + (widget->y - window->projTop);
+
+				// Draw it
+				widget->handler(widget, EVENT_PAINT);
+				gfx_BlitRectangle(gfx_buffer, widget->realX, widget->realY, widget->width, widget->height);
+			}
 		}
 	}
 }

@@ -34,11 +34,27 @@ typedef int WidgetEventHandler(Widget *widget, int event);
 /*
  * A window
  *
- * widgets.first	Pointer to the first widget in this window. If NULL there
- *					are no widgets in this window.
- * widgets.last		Pointer to the last widget in this window. If NULL there
- *					are no widgets in this window.
- * widgets.selected	Pointer to the currently selected widget.
+ * widgets.first		Pointer to the first widget in this window. If NULL
+ *						there are no widgets in this window.
+ * widgets.last			Pointer to the last widget in this window. If NULL
+ *						there are no widgets in this window.
+ * widgets.selected		Pointer to the currently selected widget.
+ *
+ * menu					The menu
+ *
+ * realTop				The screen coordinate of the top of the main drawable
+ *						area (where widgets are drawn).
+ * realLeft				The screen coordinate of the left of the main drawable
+ *						area (where widgets are drawn).
+ *
+ * projTop				The virtual Y coordinate at the top of the screen.
+ * projLeft				The virtual X coordinate at the left of the screen.
+ * 
+ * width				The width of the window.
+ * height				The height of the window
+ *
+ * baseX			The base X coordinate of the main drawing area.
+ * baseY			The base Y coordinate of the main drawing area
  */
 struct Window {
 	struct {
@@ -48,6 +64,15 @@ struct Window {
 	} widgets;
 
 	Menu *menu;
+
+	int realTop;
+	int realLeft;
+
+	int projTop;
+	int projLeft;
+
+	int width;
+	int height;
 };
 
 
@@ -87,6 +112,8 @@ enum WidgetType {
  * y			The Y coordinate of the widget in pixels
  * width		The width of the widget in pixels
  * height		The height of the widget in pixels
+ * realX		The X coordinate in the drawing buffer
+ * realY		The Y coordinate in the drawing buffer
  * data			Pointer to widget-specific data.
  *
  * handler		Pointer to the event handler function
@@ -102,6 +129,9 @@ struct Widget {
 	int width;
 	int height;
 
+	int realX;
+	int realY;
+
 	void *data;
 
 	WidgetEventHandler *handler;
@@ -109,7 +139,7 @@ struct Widget {
 
 #define getData(type, widget) ((type *)widget->data)
 
-
+#define MENUBAR_HEIGHT 20
 
 /*
  * A menu
@@ -148,42 +178,84 @@ struct MenuItem {
 	char label[12];
 
 	union {
-		Menu *subMenu;
+		Menu *submenu;
 		MenuSelectHandler *handler;
 	};
 };
 
+void cedar_init();
+
+void cedar_cleanup();
+
 /*
  * Initialize a window
+ *
+ * window		The window to initialize.
  */
 void cedar_initWindow(Window *window);
 
 /*
  * Clean up after a window
+ *
+ * window		The window to clean up.
  */
 void cedar_destroyWindow(Window *window);
 
 /*
- * Display a window
+ * Display a window.
+ *
+ * window		The window to display.
  */
 int cedar_display(Window *window);
 
 /*
  * Add a widget to a window. Widgets can only be added to one window.
+ *
+ * window		The window to add the widget to
+ * widget		The widget to add to the window
  */
 void cedar_addWidget(Window *window, Widget *widget);
 
 /*
  * Free a widget's memory. The previous and next widgets will be linked to each
  * other.
+ *
+ * widget		The widget to clean up.
  */
 void cedar_destroyWidget(Widget *widget);
 
 /*
- * Add a menu to the window
+ * Set the menu for a window
+ *
+ * window		The window to add the menu to
+ * menu			The menu to add to the window
  */
-void cedar_addMenu(Window *window, Menu *menu);
+void cedar_setMenu(Window *window, Menu *menu);
 
+/*
+ * Add a separator to a menu
+ *
+ * menu			The menu to add the separator to
+ */
+void cedar_addMenuSeparator(Menu *menu);
+
+/*
+ * Add an item to the menu. See also: cedar_addSubmenu
+ *
+ * menu			The menu to add the item to
+ * label		The label of the menu. This must be less than 12 characters.
+ * handler		The handler to call when the menu item is selected
+ */
+void cedar_addMenuItem(Menu *menu, const char *label, MenuSelectHandler *handler);
+
+/*
+ * Add a submenu to the menu.
+ *
+ * parent		The parent menu to add this child menu to.
+ * label		The label of the submenu. This must be less than 12 characters.
+ * submenu		The child menu to add to the parent menu.
+ */
+void cedar_addSubmenu(Menu *parent, const char *label, Menu *submenu);
 
 /*
  * A checkbox is a widget which can be checked on or off.
