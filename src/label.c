@@ -28,5 +28,6 @@ int defaultLabelHandler(Widget *widget, int event) {
 	switch (event) {
 		case EVENT_PAINT:
 			// Paint widget
+			break;
 	}
 }

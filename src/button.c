@@ -30,5 +30,6 @@ int defaultButtonHandler(Widget *widget, int event) {
 			break;
 		case EVENT_KEYDOWN:
 			// Handle keypress
+			break;
 	}
 }

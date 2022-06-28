@@ -13,7 +13,7 @@ int main() {
 
 	// Add menu
 	Menu menu;
-	cedar_addMenu(&window, &menu);
+	cedar_setMenu(&window, &menu);
 
 	Menu prgmMenu;
 	cedar_addSubmenu(&menu, "Program", &prgmMenu);
