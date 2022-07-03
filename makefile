@@ -1,23 +1,42 @@
+CEDEV = $(shell cedev-config --prefix)
+OUTDIR = out
 
-include $(CEDEV)/meta/makefile.mk
+NAME = cedar
+SRCS = $(filter-out src/$(NAME).asm,$(wildcard src/*.c))
+OBJS = $(addsuffix .src,$(patsubst src/%,$(OUTDIR)/%,$(SRCS)))
+INCLUDES = include/ $(CEDEV)/include
 
-CFLAGS = -Wall -Wextra -Oz -I include/
-CXXFLAGS = -Wall -Wextra -Oz -I include/
 
-LIB_SRC := src/cedar.asm
-LIB_LIB := bin/cedar.lib
-LIB_8XV := bin/cedar.8xv
-LIB_H := include/cedar.h
+# verbosity
+V ?= 0
+ifeq ($(V),0)
+Q = @
+FASMG_V := -n
+else
+Q =
+FASMG_V := -v$(V)
+endif
 
-all: cedar
+# os specific
+ifeq ($(OS),Windows_NT)
+CC = ez80-clang.exe
+RMDIR = ( rmdir /s /q $1 2>nul || call )
+MKDIR = ( mkdir $1 2>nul || call )
+else
+CC = ez80-clang
+RMDIR = rm -rf $1
+MKDIR = mkdir -p $1
+endif
 
-cedar: $(LIB_8XV)
+CFLAGS = -S -Wall -Wextra -Oz -mllvm -profile-guided-section-prefix=false $(addprefix -I ,$(INCLUDES))
 
-$(LIB_8XV): $(LIB_SRC)
-	$(call MKDIR,$(@D))
-	$(Q)$(FASMG) -v 2 $^ $@
+all: $(OUTDIR) $(OBJS)
+
+$(OUTDIR)/%.c.src: src/%.c
+	$(Q)$(CC) $(CFLAGS) $< -o $@
+
+$(OUTDIR):
+	$(Q)$(call MKDIR, $(OUTDIR))
 
 clean:
-	$(Q)$(call REMOVE,$(LIB_LIB) $(LIB_8XV))
-
-.PHONY: all clean
+	$(Q)$(call RMDIR,$(OUTDIR))

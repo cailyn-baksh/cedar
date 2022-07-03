@@ -13,7 +13,8 @@ include_library "E:\CEdev\CEdev\lib\libload\libload.lib"
 	export cedar_init
 	export cedar_cleanup
 
-;	export cedar_initWindow
+	export cedar_initWindow
+	extern cedar_initWindow
 ;	export cedar_destroyWindow
 ;	export cedar_display
 
