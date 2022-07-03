@@ -35,9 +35,6 @@ endif
 CFLAGS = -S -Wall -Wextra -Oz -mllvm -profile-guided-section-prefix=false $(addprefix -I ,$(INCLUDES)) -Wno-unused-parameter -Wno-return-type
 
 all: $(OUTDIR) $(OBJS)
-# TODO: write script to merge multiple .srcs into one
-# TODO: the problem with below is that there are duplicate externs
-#	$(Q)type $(call NATIVEPATH,$(OBJS)) >cedar.src
 
 $(OUTDIR)/%.asm.src: src/%.asm
 	$(Q)echo [copying] $(call NATIVEPATH,$<)
@@ -54,3 +51,5 @@ clean:
 	$(Q)$(call RMDIR,$(OUTDIR))
 
 rebuild: clean all
+
+.PHONY: all clean rebuild
