@@ -6,6 +6,8 @@
 
 #include <stdbool.h>
 
+#include <graphx.h>
+
 struct Window;
 typedef struct Window Window;
 

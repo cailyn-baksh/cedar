@@ -2,7 +2,7 @@ CEDEV = $(shell cedev-config --prefix)
 OUTDIR = out
 
 NAME = cedar
-SRCS = $(filter-out src/$(NAME).asm,$(wildcard src/*.c))
+SRCS = $(wildcard src/*.c src/*.asm)
 OBJS = $(addsuffix .src,$(patsubst src/%,$(OUTDIR)/%,$(SRCS)))
 INCLUDES = include/ $(CEDEV)/include
 
@@ -20,23 +20,34 @@ endif
 # os specific
 ifeq ($(OS),Windows_NT)
 CC = ez80-clang.exe
+NATIVEPATH ?= $(subst /,\,$1)
 RMDIR = ( rmdir /s /q $1 2>nul || call )
 MKDIR = ( mkdir $1 2>nul || call )
+COPY = ( echo F | xcopy $1 $2 /Q /Y /I /K 1>nul 2>nul || call )
 else
 CC = ez80-clang
-RMDIR = rm -rf $1
+NATIVEPATH ?= $(subst \,/,$1) $1
+RMDIR = rm -rf
 MKDIR = mkdir -p $1
+COPY = cp $1 $2
 endif
 
-CFLAGS = -S -Wall -Wextra -Oz -mllvm -profile-guided-section-prefix=false $(addprefix -I ,$(INCLUDES))
+CFLAGS = -S -Wall -Wextra -Oz -mllvm -profile-guided-section-prefix=false $(addprefix -I ,$(INCLUDES)) -Wno-unused-parameter -Wno-return-type
 
 all: $(OUTDIR) $(OBJS)
 
+$(OUTDIR)/%.asm.src: src/%.asm
+	$(Q)echo [copying] $(call NATIVEPATH,$<)
+	$(Q)$(call COPY,$(call NATIVEPATH,$<),$(call NATIVEPATH,$@))
+
 $(OUTDIR)/%.c.src: src/%.c
+	$(Q)echo [compiling] $(call NATIVEPATH,$<)
 	$(Q)$(CC) $(CFLAGS) $< -o $@
 
 $(OUTDIR):
-	$(Q)$(call MKDIR, $(OUTDIR))
+	$(Q)$(call MKDIR,$(OUTDIR))
 
 clean:
 	$(Q)$(call RMDIR,$(OUTDIR))
+
+rebuild: clean all

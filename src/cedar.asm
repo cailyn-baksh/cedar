@@ -1,19 +1,20 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;                                   Exports                                   ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	export cedar_init
-	export cedar_cleanup
+	section	.text,"ax",@progbits
+	assume	adl = 1
+	public _cedar_init
+	public _cedar_cleanup
 
-
-cedar_init:
-;	call gfx_Begin
-;	call gfx_SetDrawBuffer
+_cedar_init:
+	call _gfx_Begin
+	; gfx_SetDrawBuffer -> gfx_SetDraw(gfx_buffer)
+	ld hl,1  ; gfx_buffer = 1
+	push hl
+	call _gfx_SetDraw
 	ret
 
-cedar_cleanup:
-;	call gfx_End
+_cedar_cleanup:
+	call _gfx_End
 	ret
 
-;extern gfx_Begin
-;extern gfx_SetDrawBuffer
-;extern gfx_End
+	extern _gfx_Begin
+	extern _gfx_SetDraw
+	extern _gfx_End
