@@ -7,6 +7,7 @@
 #include <stdbool.h>
 
 #include <graphx.h>
+#include <keypadc.h>
 
 struct Window;
 typedef struct Window Window;

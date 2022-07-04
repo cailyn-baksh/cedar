@@ -1,16 +1,25 @@
 	section	.text,"ax",@progbits
 	assume	adl = 1
-	public _cedar_init
-	public _cedar_cleanup
+	section	.text,"ax",@progbits
 
+	public _cedar_init
 _cedar_init:
-	call _gfx_Begin
-	; gfx_SetDrawBuffer -> gfx_SetDraw(gfx_buffer)
-	ld hl,1  ; gfx_buffer = 1
 	push hl
+
+	call _gfx_Begin
+
+	; gfx_SetDrawBuffer -> gfx_SetDraw(gfx_buffer) -> gfx_SetDraw(1)
+	dec sp  ; high byte (junk data)
+	ld l,1  ; h = junk data, l = 1
+	push hl ; push gfx_buffer (xx 01)
 	call _gfx_SetDraw
+	pop hl
+	inc sp
+
+	pop hl
 	ret
 
+	public _cedar_cleanup
 _cedar_cleanup:
 	call _gfx_End
 	ret

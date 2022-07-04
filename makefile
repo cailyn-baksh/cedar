@@ -32,7 +32,7 @@ MKDIR = mkdir -p $1
 COPY = cp $1 $2
 endif
 
-CFLAGS = -S -Wall -Wextra -Oz -mllvm -profile-guided-section-prefix=false $(addprefix -I ,$(INCLUDES)) -Wno-unused-parameter -Wno-return-type
+CFLAGS = -S -Wall -Wextra -Oz -mllvm -profile-guided-section-prefix=false $(addprefix -I ,$(INCLUDES))
 
 all: $(OUTDIR) $(OBJS)
 
@@ -52,4 +52,7 @@ clean:
 
 rebuild: clean all
 
-.PHONY: all clean rebuild
+test:
+	$(MAKE) -C test
+
+.PHONY: all clean rebuild test

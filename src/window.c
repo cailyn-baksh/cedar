@@ -103,7 +103,9 @@ int cedar_display(Window *window) {
 		/* Paint */
 		if (window->menu != NULL) {
 			// Paint menu bar
-			gfx_HorizLine_NoClip(0, MENUBAR_HEIGHT, GFX_LCD_WIDTH);
+			gfx_HorizLine(0, MENUBAR_HEIGHT, GFX_LCD_WIDTH);
+
+			gfx_BlitRectangle(gfx_buffer, 0, 0, GFX_LCD_WIDTH, MENUBAR_HEIGHT+1);
 		}
 
 		// Paint widgets
