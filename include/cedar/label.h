@@ -10,7 +10,8 @@
  * Label data. In label widgets, data points to an instance of this structure.
  */
 typedef struct {
-	char *text;
+	size_t nLines;
+	char **lines;
 } LabelData;
 
 /*
@@ -18,8 +19,8 @@ typedef struct {
  *
  * x		The X coordinate of the left side of the label
  * y		The Y coordinate of the top of the label
- * width	The width of the label's drawing area
- * height	The height of the label's drawing area
+ * width	The width of the label in ems
+ * height	The height of the label in pixels
  * text		The content of the label
  * Returns a new Label widget
  */

@@ -9,12 +9,12 @@ _cedar_init:
 	call _gfx_Begin
 
 	; gfx_SetDrawBuffer -> gfx_SetDraw(gfx_buffer) -> gfx_SetDraw(1)
-	dec sp  ; high byte (junk data)
 	ld l,1  ; h = junk data, l = 1
-	push hl ; push gfx_buffer (xx 01)
+	push hl ; push gfx_buffer (xxx 001)
+			; the convention for representing 24 bit registers in this project
+			; will be in pairs of three nybbles (one trybble)
 	call _gfx_SetDraw
 	pop hl
-	inc sp
 
 	pop hl
 	ret

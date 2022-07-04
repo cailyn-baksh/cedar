@@ -21,7 +21,7 @@ int main() {
 	cedar_addMenuItem(&prgmMenu, "Exit", menuExitSelectHandler);
 
 	// Add widgets
-	cedar_addWidget(&window, Label(0, 0, 10, 3, "Hello World!"));
+	cedar_addWidget(&window, Label(10, 10, 10, 30, "Hello World!"));
 
 	cedar_display(&window);
 
