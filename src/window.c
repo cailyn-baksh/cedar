@@ -56,14 +56,15 @@ void cedar_addWidget(Window *window, Widget *widget) {
 	}
 }
 
-void cedar_setMenu(Window *window, Menu *menu) {
-	window->menu = menu;
-	window->realTop = MENUBAR_HEIGHT;
-}
-
 bool key_2nd = false;
 bool key_alpha = false;
 bool alphaLock = false;
+
+void clearRect(int x, int y, int width, int height) {
+	uint8_t prevColor = gfx_SetColor(255);
+	gfx_FillRectangle(x, y, width, height);
+	gfx_SetColor(prevColor);
+}
 
 int cedar_display(Window *window) {
 	// Previous state of the keyboard
@@ -87,30 +88,62 @@ int cedar_display(Window *window) {
 			if (key_2nd && (kb_Data[1] & kb_Mode)) {
 				// Quit
 				return 0;
-			} else if ((kb_Data[7] & kb_Up) && (window->menu != NULL)) {
-				// select the menu
-				window->menu->selected = window->menu->first;
-				window->menuSelected = true;
-			} else if ((kb_Data[7] & kb_Down) && (window->menu != NULL) && (window->menuSelected)) {
-				window->menu->selected = NULL;
-				window->menuSelected = false;
-			} else if ((kb_Data[7] & kb_Right) && (window->widgets.selected->next != NULL)) {
-				if (!window->menuSelected) {
+			} else if (kb_Data[7] & kb_Up) {
+				// up key pressed
+				if (window->menu) {
+					// Select the first menu item that is not a separator
+					MenuItem *firstItem = window->menu->first;
+
+					while (firstItem != NULL && firstItem->type == MENUITEM_SEPARATOR) {
+						firstItem = firstItem->next;
+					}
+
+					if (firstItem != NULL) {
+						window->menu->selected = firstItem;
+					}
+				}
+			} else if (kb_Data[7] & kb_Down) {
+				// down key pressed
+				if (window->menu) {
+					window->menu->selected = NULL;
+				}
+			} else if (kb_Data[7] & kb_Right) {
+				// right key pressed
+				if (window->menu && window->menu->selected) {
+					// Select next menu item that is not a separator
+					MenuItem *nextItem = window->menu->selected->next;
+
+					while (nextItem != NULL && nextItem->type == MENUITEM_SEPARATOR) {
+						nextItem = nextItem->next;
+					}
+
+					if (nextItem != NULL) {
+						window->menu->selected = nextItem;
+					}
+				} else if (window->widgets.selected->next) {
 					// Select next widget
 					window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
 					window->widgets.selected = window->widgets.selected->next;
 					window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
-				} else {
-					// Select next menu item
 				}
-			} else if ((kb_Data[7] & kb_Left) && (window->widgets.selected->prev != NULL)) {
-				if (!window->menuSelected) {
+			} else if (kb_Data[7] & kb_Left) {
+				// left key pressed
+				if (window->menu && window->menu->selected) {
+					// Select previous menu item that is not a separator
+					MenuItem *prevItem = window->menu->selected->prev;
+
+					while (prevItem != NULL && prevItem->type == MENUITEM_SEPARATOR) {
+						prevItem = prevItem->prev;
+					}
+
+					if (prevItem != NULL) {
+						window->menu->selected = prevItem;
+					}
+				} else if (window->widgets.selected->prev) {
 					// Select previous widget
 					window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
 					window->widgets.selected = window->widgets.selected->prev;
 					window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
-				} else {
-					// Select previous menu item
 				}
 			} else {
 				// Check for key events
@@ -172,13 +205,15 @@ int cedar_display(Window *window) {
 			) {
 				// Widget is visible
 
+				// Clear its region of the buffer
+				clearRect(widget->realX, widget->realY, widget->width, widget->height);
+
 				// Set the real coordinates
 				widget->realX = window->realLeft + (widget->x - window->projLeft);
 				widget->realY = window->realTop + (widget->y - window->projTop);
 
 				// Draw it
 				widget->handler(widget, EVENT_PAINT);
-				gfx_BlitRectangle(gfx_buffer, widget->realX, widget->realY, widget->width, widget->height);
 			}
 		}
 
@@ -186,10 +221,12 @@ int cedar_display(Window *window) {
 		if (window->menu != NULL) {
 			unsigned int menubarPaintOffset = 5;
 
+			clearRect(0, 0, window->width, MENUBAR_HEIGHT);
+
 			for (MenuItem *current=window->menu->first; current != NULL; current = current->next) {
 				if (current->type == MENUITEM_SEPARATOR) {
 					// Draw separator
-					gfx_HorizLine_NoClip(menubarPaintOffset, 5, MENUBAR_HEIGHT);
+					gfx_VertLine_NoClip(menubarPaintOffset, 2, MENUBAR_HEIGHT-4);
 					menubarPaintOffset += 6;
 				} else {
 					unsigned int labelWidth = gfx_GetStringWidth(current->label);
@@ -199,15 +236,28 @@ int cedar_display(Window *window) {
 						break;
 					}
 
-					gfx_PrintStringXY(current->label, menubarPaintOffset, 5);
+
+					if (current == window->menu->selected) {  // pointer comparison
+						gfx_FillRectangle(menubarPaintOffset-2, 3, labelWidth+4, 14);
+
+						gfx_SetTextFGColor(255);
+						gfx_SetTextBGColor(0);
+						gfx_SetTextTransparentColor(0);
+						gfx_PrintStringXY(current->label, menubarPaintOffset, 5);
+						gfx_SetTextFGColor(0);
+						gfx_SetTextBGColor(255);
+						gfx_SetTextTransparentColor(255);
+					} else {
+						gfx_PrintStringXY(current->label, menubarPaintOffset, 5);
+					}
 
 					menubarPaintOffset += labelWidth + 5;
 				}
 			}
 
 			gfx_HorizLine_NoClip(0, MENUBAR_HEIGHT, window->width);
-
-			gfx_BlitRectangle(gfx_buffer, 0, 0, window->width, MENUBAR_HEIGHT+1);
 		}
+
+		gfx_SwapDraw();
 	}
 }
