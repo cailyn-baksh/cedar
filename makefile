@@ -32,7 +32,7 @@ MKDIR = mkdir -p $1
 COPY = cp $1 $2
 endif
 
-CFLAGS = -S -Wall -Wextra -Oz -mllvm -profile-guided-section-prefix=false $(addprefix -I ,$(INCLUDES))
+CFLAGS = -S -Wall -Wextra -Oz -mllvm -profile-guided-section-prefix=false $(addprefix -I ,$(INCLUDES)) -DDEBUG
 
 all: $(OUTDIR) $(OBJS)
 

@@ -271,4 +271,10 @@ Widget *Checkbox(int x, int y, bool state);
  */
 Widget *Radio(int x, int y, int group);
 
+#ifndef _NOEXTERN
+extern bool key_2nd;
+extern bool key_alpha;
+extern bool alphaLock;
+#endif  // _NOEXTERN
+
 #endif  // _LIBCEDAR_H_

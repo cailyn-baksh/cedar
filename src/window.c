@@ -6,7 +6,11 @@
 #include <graphx.h>
 #include <keypadc.h>
 
+#define _NOEXTERN
 #include "cedar.h"
+#undef _NOEXTERN
+
+#include "cedardbg.h"
 
 void cedar_initWindow(Window *window) {
 	window->widgets.first = NULL;
@@ -56,47 +60,75 @@ void cedar_setMenu(Window *window, Menu *menu) {
 	window->realTop = MENUBAR_HEIGHT;
 }
 
-// Previous state of the keyboard
-uint8_t prevKbState[8] = { 0 };
+bool key_2nd = false;
+bool key_alpha = false;
+bool alphaLock = false;
 
 int cedar_display(Window *window) {
+	// Previous state of the keyboard
+	uint8_t prevKbState[8] = { 0 };
 	window->widgets.selected = window->widgets.first;
 
 	for (;;) {
 		/* Dispatch events */
 		kb_Scan();
 
-		// Check for arrow keys & dispatch focus/blur events
-		if ((kb_Data[7] & kb_Right) && (window->widgets.selected->next != NULL)) {
-			// Select next widget
-			window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
-			window->widgets.selected = window->widgets.selected->next;
-			window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
-		} else if ((kb_Data[7] & kb_Left) && (window->widgets.selected->prev != NULL)) {
-			// Select previous widget
-			window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
-			window->widgets.selected = window->widgets.selected->prev;
-			window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
-		}
+		if (kb_Data[1] & kb_2nd) {
+			key_2nd = !key_2nd;
+		} else if (kb_Data[2] & kb_Alpha) {
+			key_alpha = !key_alpha;
 
-		// Check for key events
-		bool keydown, keyup;
-		for (int i=1; i < 8; ++i) {
-			if (!keyup && (prevKbState[i] & kb_Data[i]) != prevKbState[i]) {
-				// Not all keys previously pressed are still pressed (keyup)
-				keyup = true;
-			} else if (!keydown && (prevKbState[i] & kb_Data[i]) != kb_Data[i]) {
-				// Not all keys currently pressed were previously pressed (keydown)
-				keydown = true;
+			if (key_2nd) {
+				key_2nd = false;
+				alphaLock = !alphaLock;
 			}
-		}
+		} else {
+			if (key_2nd && (kb_Data[1] & kb_Mode)) {
+				// Quit
+				return 0;
+			} else if ((kb_Data[7] & kb_Right) && (window->widgets.selected->next != NULL)) {
+				// Select next widget
+				window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
+				window->widgets.selected = window->widgets.selected->next;
+				window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+			} else if ((kb_Data[7] & kb_Left) && (window->widgets.selected->prev != NULL)) {
+				// Select previous widget
+				window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
+				window->widgets.selected = window->widgets.selected->prev;
+				window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+			} else {
+				// Check for key events
+				bool keydown, keyup;
+				for (int i=1; i < 8; ++i) {
+					if (!keyup && (prevKbState[i] & kb_Data[i]) != prevKbState[i]) {
+						// Not all keys previously pressed are still pressed (keyup)
+						keyup = true;
+					} else if (!keydown && (prevKbState[i] & kb_Data[i]) != kb_Data[i]) {
+						// Not all keys currently pressed were previously pressed (keydown)
+						keydown = true;
+					}
+				}
 
-		if (keyup) {
-			window->widgets.selected->handler(window->widgets.selected, EVENT_KEYUP);
-		}
+				if (keyup) {
+					window->widgets.selected->handler(window->widgets.selected, EVENT_KEYUP);
 
-		if (keydown) {
-			window->widgets.selected->handler(window->widgets.selected, EVENT_KEYDOWN);
+					// check special keys
+					if (!(prevKbState[1] & kb_2nd)) {
+						key_2nd = false;
+					}
+					if (!(prevKbState[2] & kb_Alpha)) {
+						if (!alphaLock) {
+							key_alpha = false;
+						}
+					}
+				}
+
+				if (keydown) {
+					window->widgets.selected->handler(window->widgets.selected, EVENT_KEYDOWN);
+				}
+
+			}
+
 		}
 
 		// store current kb_Data for next check
