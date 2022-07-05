@@ -13,12 +13,17 @@ int main() {
 
 	// Add menu
 	Menu menu;
+	cedar_initMenu(&menu);
 	cedar_setMenu(&window, &menu);
 
 	Menu prgmMenu;
+	cedar_initMenu(&prgmMenu);
 	cedar_addSubmenu(&menu, "Program", &prgmMenu);
+
 	cedar_addMenuSeparator(&prgmMenu);
 	cedar_addMenuItem(&prgmMenu, "Exit", menuExitSelectHandler);
+
+	cedar_addMenuSeparator(&menu);  // this doesnt work for some reason...
 
 	// Add widgets
 	cedar_addWidget(&window, Label(10, 10, 10, 30, "Hello World!"));

@@ -19,7 +19,6 @@ Widget *Label(int x, int y, int width, int height, const char *text) {
 
 	widget->data = malloc(sizeof(LabelData));
 	LabelData *data = widget->data;
-	//getData(LabelData, widget)->text = text;
 
 	size_t len = strlen(text);
 	data->nLines = (len + (width-1)) / width;  // ceiling division

@@ -235,6 +235,8 @@ void cedar_destroyWidget(Widget *widget);
  */
 void cedar_setMenu(Window *window, Menu *menu);
 
+void cedar_initMenu(Menu *menu);
+
 /*
  * Add a separator to a menu
  *

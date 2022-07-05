@@ -24,6 +24,8 @@ void cedar_initWindow(Window *window) {
 }
 
 void cedar_destroyWindow(Window *window) {
+	// Clean up menu bar
+
 	// Clean up widgets
 	if (window->widgets.first != NULL) {
 		while (window->widgets.first->next != NULL) {
@@ -101,13 +103,6 @@ int cedar_display(Window *window) {
 		memcpy(prevKbState, kb_Data, 8);
 
 		/* Paint */
-		if (window->menu != NULL) {
-			// Paint menu bar
-			gfx_HorizLine(0, MENUBAR_HEIGHT, GFX_LCD_WIDTH);
-
-			gfx_BlitRectangle(gfx_buffer, 0, 0, GFX_LCD_WIDTH, MENUBAR_HEIGHT+1);
-		}
-
 		// Paint widgets
 		for (Widget *widget = window->widgets.first; widget != NULL; widget = widget->next) {
 			if (widget->x >= window->projLeft
@@ -125,6 +120,34 @@ int cedar_display(Window *window) {
 				widget->handler(widget, EVENT_PAINT);
 				gfx_BlitRectangle(gfx_buffer, widget->realX, widget->realY, widget->width, widget->height);
 			}
+		}
+
+		// Paint menu bar
+		if (window->menu != NULL) {
+			unsigned int menubarPaintOffset = 5;
+
+			for (MenuItem *current=window->menu->first; current != NULL; current = current->next) {
+				if (current->type == MENUITEM_SEPARATOR) {
+					// Draw separator
+					gfx_HorizLine_NoClip(menubarPaintOffset, 5, MENUBAR_HEIGHT);
+					menubarPaintOffset += 6;
+				} else {
+					unsigned int labelWidth = gfx_GetStringWidth(current->label);
+
+					if (menubarPaintOffset + labelWidth > window->width) {
+						// stop painting menu items; no more room
+						break;
+					}
+
+					gfx_PrintStringXY(current->label, menubarPaintOffset, 5);
+
+					menubarPaintOffset += labelWidth + 5;
+				}
+			}
+
+			gfx_HorizLine_NoClip(0, MENUBAR_HEIGHT, window->width);
+
+			gfx_BlitRectangle(gfx_buffer, 0, 0, window->width, MENUBAR_HEIGHT+1);
 		}
 	}
 }
