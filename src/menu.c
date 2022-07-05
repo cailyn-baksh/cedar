@@ -5,6 +5,7 @@
 void cedar_initMenu(Menu *menu) {
 	menu->first = NULL;
 	menu->last = NULL;
+	menu->selected = NULL;
 }
 
 void cedar_addMenuSeparator(Menu *menu) {

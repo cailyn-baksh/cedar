@@ -1,8 +1,12 @@
 #include <cedar.h>
 #include <cedar/label.h>
 
-int menuExitSelectHandler(Menu *menu) {
+int menuAboutSelectHandler() {
+	return 0;
+}
 
+int menuExitSelectHandler() {
+	return 0;
 }
 
 int main() {
@@ -20,6 +24,7 @@ int main() {
 	cedar_initMenu(&prgmMenu);
 	cedar_addSubmenu(&menu, "Program", &prgmMenu);
 
+	cedar_addMenuItem(&prgmMenu, "About", menuAboutSelectHandler);
 	cedar_addMenuSeparator(&prgmMenu);
 	cedar_addMenuItem(&prgmMenu, "Exit", menuExitSelectHandler);
 

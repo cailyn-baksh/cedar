@@ -18,6 +18,7 @@ void cedar_initWindow(Window *window) {
 	window->widgets.selected = NULL;
 
 	window->menu = NULL;
+	window->menuSelected = false;
 
 	window->realTop = 0;
 	window->realLeft = 0;
@@ -86,16 +87,31 @@ int cedar_display(Window *window) {
 			if (key_2nd && (kb_Data[1] & kb_Mode)) {
 				// Quit
 				return 0;
+			} else if ((kb_Data[7] & kb_Up) && (window->menu != NULL)) {
+				// select the menu
+				window->menu->selected = window->menu->first;
+				window->menuSelected = true;
+			} else if ((kb_Data[7] & kb_Down) && (window->menu != NULL) && (window->menuSelected)) {
+				window->menu->selected = NULL;
+				window->menuSelected = false;
 			} else if ((kb_Data[7] & kb_Right) && (window->widgets.selected->next != NULL)) {
-				// Select next widget
-				window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
-				window->widgets.selected = window->widgets.selected->next;
-				window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+				if (!window->menuSelected) {
+					// Select next widget
+					window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
+					window->widgets.selected = window->widgets.selected->next;
+					window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+				} else {
+					// Select next menu item
+				}
 			} else if ((kb_Data[7] & kb_Left) && (window->widgets.selected->prev != NULL)) {
-				// Select previous widget
-				window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
-				window->widgets.selected = window->widgets.selected->prev;
-				window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+				if (!window->menuSelected) {
+					// Select previous widget
+					window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
+					window->widgets.selected = window->widgets.selected->prev;
+					window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+				} else {
+					// Select previous menu item
+				}
 			} else {
 				// Check for key events
 				bool keydown, keyup;
@@ -110,21 +126,33 @@ int cedar_display(Window *window) {
 				}
 
 				if (keyup) {
-					window->widgets.selected->handler(window->widgets.selected, EVENT_KEYUP);
+					if (!window->menuSelected) {
+						// Menu is not selected
+						window->widgets.selected->handler(window->widgets.selected, EVENT_KEYUP);
 
-					// check special keys
-					if (!(prevKbState[1] & kb_2nd)) {
-						key_2nd = false;
-					}
-					if (!(prevKbState[2] & kb_Alpha)) {
-						if (!alphaLock) {
-							key_alpha = false;
+						// check special keys
+						if (!(prevKbState[1] & kb_2nd)) {
+							key_2nd = false;
+						}
+						if (!(prevKbState[2] & kb_Alpha)) {
+							if (!alphaLock) {
+								key_alpha = false;
+							}
 						}
 					}
 				}
 
 				if (keydown) {
-					window->widgets.selected->handler(window->widgets.selected, EVENT_KEYDOWN);
+					if (!window->menuSelected) {
+						window->widgets.selected->handler(window->widgets.selected, EVENT_KEYDOWN);
+					} else {
+						// Menu is selected
+						if (window->menu->selected->type == MENUITEM_BUTTON) {
+							window->menu->selected->handler(window->menu);
+						} else if (window->menu->selected->type == MENUITEM_PARENT) {
+
+						}
+					}
 				}
 
 			}

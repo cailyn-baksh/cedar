@@ -4,6 +4,16 @@
 #ifndef _LIBCEDAR_H_
 #define _LIBCEDAR_H_
 
+#define _LIBCEDAR_Q(s) #s
+#define _LIBCEDAR_QUOTE(s) _LIBCEDAR_Q(s)
+
+// Version info
+// minor version is incremented each release
+// major version is incremented after each breaking change
+#define LIBCEDAR_MAJOR_VERSION 0
+#define LIBCEDAR_MINOR_VERSION 1
+#define LIBCEDAR_VERSION_STR _LIBCEDAR_QUOTE(LIBCEDAR_MAJOR_VERSION) "." _LIBCEDAR_QUOTE(LIBCEDAR_MINOR_VERSION)
+
 #include <stdbool.h>
 
 #include <graphx.h>
@@ -27,7 +37,7 @@ typedef struct MenuItem MenuItem;
 /*
  * Handles a menu button being selected
  */
-typedef int MenuSelectHandler(Menu *menu);
+typedef int MenuSelectHandler();
 
 /*
  * Handle events for a widget.
@@ -67,6 +77,7 @@ struct Window {
 	} widgets;
 
 	Menu *menu;
+	bool menuSelected;
 
 	int realTop;
 	int realLeft;
@@ -147,12 +158,17 @@ struct Widget {
 /*
  * A menu
  *
- * first		The first MenuItem in the menu
- * last			The last MenuItem in the menu
+ * first			The first MenuItem in the menu
+ * last				The last MenuItem in the menu
+ * selected			A pointer to the currently selected MenuItem in the menu
+ * submenuActive	Whether the selected submenu is active. N/A if selected
+ *					item is not MENUITEM_PARENT.
  */
 struct Menu {
 	MenuItem *first;
 	MenuItem *last;
+	MenuItem *selected;
+	bool submenuActive;
 };
 
 /*
