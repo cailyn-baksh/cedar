@@ -32,4 +32,6 @@ int defaultButtonHandler(Widget *widget, int event) {
 			// Handle keypress
 			break;
 	}
+
+	return 0;
 }

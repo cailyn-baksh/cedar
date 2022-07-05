@@ -38,7 +38,7 @@ Widget *Label(int x, int y, int width, int height, const char *text) {
 }
 
 void paintLabel(Widget *widget) {
-	for (int i=0, lineOffset=0; i < getData(LabelData, widget)->nLines; ++i, lineOffset += 10) {
+	for (size_t i=0, lineOffset=0; i < getData(LabelData, widget)->nLines; ++i, lineOffset += 10) {
 		gfx_PrintStringXY(getData(LabelData, widget)->lines[i], widget->realX, widget->realY + lineOffset);
 	}
 }
@@ -50,4 +50,6 @@ int defaultLabelHandler(Widget *widget, int event) {
 			paintLabel(widget);
 			break;
 	}
+
+	return 0;
 }

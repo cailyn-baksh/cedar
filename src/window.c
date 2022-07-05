@@ -164,14 +164,8 @@ int cedar_display(Window *window) {
 						window->widgets.selected->handler(window->widgets.selected, EVENT_KEYUP);
 
 						// check special keys
-						if (!(prevKbState[1] & kb_2nd)) {
-							key_2nd = false;
-						}
-						if (!(prevKbState[2] & kb_Alpha)) {
-							if (!alphaLock) {
-								key_alpha = false;
-							}
-						}
+						if (!(prevKbState[1] & kb_2nd)) key_2nd = false;
+						if (!(prevKbState[2] & kb_Alpha) && !alphaLock) key_alpha = false;
 					}
 				}
 
@@ -189,11 +183,11 @@ int cedar_display(Window *window) {
 				}
 
 			}
-
 		}
 
 		// store current kb_Data for next check
-		memcpy(prevKbState, kb_Data, 8);
+		// (kb_Data definition is a little weird so we use the address from keypadc.h)
+		memcpy(prevKbState, (void *)0xF50010, 8);
 
 		/* Paint */
 		// Paint widgets
@@ -235,7 +229,6 @@ int cedar_display(Window *window) {
 						// stop painting menu items; no more room
 						break;
 					}
-
 
 					if (current == window->menu->selected) {  // pointer comparison
 						gfx_FillRectangle(menubarPaintOffset-2, 3, labelWidth+4, 14);

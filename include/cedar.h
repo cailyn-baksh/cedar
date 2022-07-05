@@ -85,8 +85,8 @@ struct Window {
 	int projTop;
 	int projLeft;
 
-	int width;
-	int height;
+	unsigned int width;
+	unsigned int height;
 };
 
 
@@ -140,8 +140,8 @@ struct Widget {
 
 	int x;
 	int y;
-	int width;
-	int height;
+	unsigned int width;
+	unsigned int height;
 
 	int realX;
 	int realY;
@@ -277,15 +277,6 @@ void cedar_addMenuItem(Menu *menu, const char *label, MenuSelectHandler *handler
  * submenu		The child menu to add to the parent menu.
  */
 void cedar_addSubmenu(Menu *parent, const char *label, Menu *submenu);
-
-/*
- * A checkbox is a widget which can be checked on or off.
- */
-Widget *Checkbox(int x, int y, bool state);
-
-/*
- */
-Widget *Radio(int x, int y, int group);
 
 #ifndef _NOEXTERN
 extern bool key_2nd;
