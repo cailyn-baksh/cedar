@@ -18,7 +18,6 @@ void cedar_initWindow(Window *window) {
 	window->widgets.selected = NULL;
 
 	window->menu = NULL;
-	window->menuSelected = false;
 
 	window->realTop = 0;
 	window->realLeft = 0;
@@ -60,24 +59,74 @@ bool key_2nd = false;
 bool key_alpha = false;
 bool alphaLock = false;
 
+/*
+ * Blanks an portion of the drawing buffer
+ */
 void clearRect(int x, int y, int width, int height) {
 	uint8_t prevColor = gfx_SetColor(255);
 	gfx_FillRectangle(x, y, width, height);
 	gfx_SetColor(prevColor);
 }
 
+/*
+ * Paint active submenus.
+ */
+void paintActiveSubmenus(Menu *menu) {
+	if (menu->submenuActive && menu->selected && menu->selected->type == MENUITEM_PARENT) {
+		if (menu->selected->submenu->submenuActive) {
+			// Paint a submenu of this submenu
+			paintActiveSubmenus(menu->selected->submenu);
+		} else {
+			// Paint this submenu
+			gfx_Rectangle(5, MENUBAR_HEIGHT, 50, GFX_LCD_HEIGHT - MENUBAR_HEIGHT);
+
+			for (MenuItem *current=menu->first; current != NULL; current = current->next) {
+				if (current->type == MENUITEM_SEPARATOR) {
+
+				} else {
+
+				}
+			}
+		}
+	}
+}
+
+/*
+ * Returns the last selected menu item in a menu
+ */
+MenuItem *getLastSelectedMenuItem(Menu *menu) {
+	if (menu->submenuActive) {
+		return getLastSelectedMenuItem(menu->selected->submenu);
+	} else {
+		return menu->selected;
+	}
+}
+
 int cedar_display(Window *window) {
 	// Previous state of the keyboard
-	uint8_t prevKbState[8] = { 0 };
+	uint16_t prevKbState[8] = { 0 };
+
 	window->widgets.selected = window->widgets.first;
 
 	for (;;) {
 		/* Dispatch events */
 		kb_Scan();
 
-		if (kb_Data[1] & kb_2nd) {
+		// Check for key events
+		bool keydown = false, keyup = false;
+		for (int i=1; i < 8; ++i) {
+			if (!keyup && (prevKbState[i] & kb_Data[i]) != prevKbState[i]) {
+				// Not all keys previously pressed are still pressed (keyup)
+				keyup = true;
+			} else if (!keydown && (prevKbState[i] & kb_Data[i]) != kb_Data[i]) {
+				// Not all keys currently pressed were previously pressed (keydown)
+				keydown = true;
+			}
+		}
+
+		if (keydown && (kb_Data[1] & kb_2nd)) {
 			key_2nd = !key_2nd;
-		} else if (kb_Data[2] & kb_Alpha) {
+		} else if (keydown && (kb_Data[2] & kb_Alpha)) {
 			key_alpha = !key_alpha;
 
 			if (key_2nd) {
@@ -85,11 +134,11 @@ int cedar_display(Window *window) {
 				alphaLock = !alphaLock;
 			}
 		} else {
-			if (key_2nd && (kb_Data[1] & kb_Mode)) {
+			if (keydown && key_2nd && (kb_Data[1] & kb_Mode)) {
 				// Quit
 				return 0;
-			} else if (kb_Data[7] & kb_Up) {
-				// up key pressed
+			} else if (keydown && (kb_Data[7] & kb_Up)) {
+				// Up key pressed
 				if (window->menu) {
 					// Select the first menu item that is not a separator
 					MenuItem *firstItem = window->menu->first;
@@ -102,13 +151,13 @@ int cedar_display(Window *window) {
 						window->menu->selected = firstItem;
 					}
 				}
-			} else if (kb_Data[7] & kb_Down) {
-				// down key pressed
+			} else if (keydown && (kb_Data[7] & kb_Down)) {
+				// Down key pressed
 				if (window->menu) {
 					window->menu->selected = NULL;
 				}
-			} else if (kb_Data[7] & kb_Right) {
-				// right key pressed
+			} else if (keydown && (kb_Data[7] & kb_Right)) {
+				// Right key pressed
 				if (window->menu && window->menu->selected) {
 					// Select next menu item that is not a separator
 					MenuItem *nextItem = window->menu->selected->next;
@@ -126,8 +175,8 @@ int cedar_display(Window *window) {
 					window->widgets.selected = window->widgets.selected->next;
 					window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
 				}
-			} else if (kb_Data[7] & kb_Left) {
-				// left key pressed
+			} else if (keydown && (kb_Data[7] & kb_Left)) {
+				// Left key pressed
 				if (window->menu && window->menu->selected) {
 					// Select previous menu item that is not a separator
 					MenuItem *prevItem = window->menu->selected->prev;
@@ -146,20 +195,9 @@ int cedar_display(Window *window) {
 					window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
 				}
 			} else {
-				// Check for key events
-				bool keydown, keyup;
-				for (int i=1; i < 8; ++i) {
-					if (!keyup && (prevKbState[i] & kb_Data[i]) != prevKbState[i]) {
-						// Not all keys previously pressed are still pressed (keyup)
-						keyup = true;
-					} else if (!keydown && (prevKbState[i] & kb_Data[i]) != kb_Data[i]) {
-						// Not all keys currently pressed were previously pressed (keydown)
-						keydown = true;
-					}
-				}
-
 				if (keyup) {
-					if (!window->menuSelected) {
+					DBGPRINT("Keyup\n");
+					if (!window->menu || !window->menu->selected) {
 						// Menu is not selected
 						window->widgets.selected->handler(window->widgets.selected, EVENT_KEYUP);
 
@@ -170,24 +208,30 @@ int cedar_display(Window *window) {
 				}
 
 				if (keydown) {
-					if (!window->menuSelected) {
+					DBGPRINT("Keydown\n");
+					if (!window->menu || !window->menu->selected) {
 						window->widgets.selected->handler(window->widgets.selected, EVENT_KEYDOWN);
 					} else {
 						// Menu is selected
-						if (window->menu->selected->type == MENUITEM_BUTTON) {
-							window->menu->selected->handler(window->menu);
-						} else if (window->menu->selected->type == MENUITEM_PARENT) {
+						if (kb_Data[6] & kb_Enter) {
+							DBGPRINT("Menu item selected");
 
+							MenuItem *selected = getLastSelectedMenuItem(window->menu);
+
+							if (selected->type == MENUITEM_BUTTON) {
+								selected->handler(window->menu);
+							} else if (selected->type == MENUITEM_PARENT && selected->submenu != NULL) {
+								selected->submenu->submenuActive = true;
+							}
 						}
 					}
 				}
-
 			}
 		}
 
 		// store current kb_Data for next check
 		// (kb_Data definition is a little weird so we use the address from keypadc.h)
-		memcpy(prevKbState, (void *)0xF50010, 8);
+		memcpy(prevKbState, (void *)0xF50010, sizeof(uint16_t) * 8);
 
 		/* Paint */
 		// Paint widgets
@@ -249,6 +293,8 @@ int cedar_display(Window *window) {
 			}
 
 			gfx_HorizLine_NoClip(0, MENUBAR_HEIGHT, window->width);
+
+			paintActiveSubmenus(window->menu);
 		}
 
 		gfx_SwapDraw();

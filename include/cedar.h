@@ -77,7 +77,6 @@ struct Window {
 	} widgets;
 
 	Menu *menu;
-	bool menuSelected;
 
 	int realTop;
 	int realLeft;

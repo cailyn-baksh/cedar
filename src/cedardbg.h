@@ -7,7 +7,7 @@
 #ifdef DEBUG
 #include <debug.h>
 
-#define DBGPRINT(fmt, ...) dbg_printf(fmt, __VA_ARGS__)
+#define DBGPRINT(...) dbg_printf(__VA_ARGS__)
 #else
 #define DBGPRINT
 #endif  // DEBUG
