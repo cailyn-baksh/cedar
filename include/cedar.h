@@ -9,12 +9,13 @@
 
 // Version info
 // minor version is incremented each release
-// major version is incremented after each breaking change
+// major version is incremented after each breaking change (after major version 1)
 #define LIBCEDAR_MAJOR_VERSION 0
 #define LIBCEDAR_MINOR_VERSION 1
 #define LIBCEDAR_VERSION_STR _LIBCEDAR_QUOTE(LIBCEDAR_MAJOR_VERSION) "." _LIBCEDAR_QUOTE(LIBCEDAR_MINOR_VERSION)
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <graphx.h>
 #include <keypadc.h>
@@ -37,12 +38,19 @@ typedef struct MenuItem MenuItem;
 /*
  * Handles a menu button being selected
  */
-typedef int MenuSelectHandler();
+typedef uint24_t MenuSelectHandler();
 
 /*
  * Handle events for a widget.
  */
-typedef int WidgetEventHandler(Widget *widget, int event);
+typedef uint24_t WidgetEventHandler(Widget *widget, int event);
+
+/*
+ * Handle events for a window.
+ *
+ * 
+ */
+typedef uint24_t WindowEventHandler(Window *window, int event);
 
 /*
  * A window
@@ -67,7 +75,9 @@ typedef int WidgetEventHandler(Widget *widget, int event);
  * height				The height of the window
  *
  * baseX			The base X coordinate of the main drawing area.
- * baseY			The base Y coordinate of the main drawing area
+ * baseY			The base Y coordinate of the main drawing area.
+ *
+ * handler				An event handler to handle window events.
  */
 struct Window {
 	struct {
@@ -86,6 +96,8 @@ struct Window {
 
 	unsigned int width;
 	unsigned int height;
+
+	WindowEventHandler *handler;
 };
 
 
@@ -99,13 +111,34 @@ struct Window {
  * EVENT_KEYUP		Fired when a button is released
  * EVENT_SCROLL		Fired when a component's container scrolls
  */
-#define EVENT_DESTROY		0x0001
-#define EVENT_PAINT			0x0002
-#define EVENT_FOCUS			0x0003
-#define EVENT_BLUR			0x0004
-#define EVENT_KEYDOWN		0x0005
-#define EVENT_KEYUP			0x0006
-#define EVENT_SCROLL		0x0007
+#define EVENT_CREATE				0x000001
+#define EVENT_DESTROY				0x000002
+#define EVENT_PAINT					0x000003
+#define EVENT_FOCUS					0x000004
+#define EVENT_BLUR					0x000005
+#define EVENT_KEYDOWN				0x000006
+#define EVENT_KEYUP					0x000007
+#define EVENT_ENABLE
+#define EVENT_DISABLE
+#define EVENT_MENUSELECT
+#define EVENT_HOTKEY
+#define EVENT_TICK
+#define EVENT_VSCROLL
+#define EVENT_HSCROLL
+
+
+/*
+ * Handler return codes
+ *
+ * HANDLER_NORMAL			Returned by handlers normally
+ * HANDLER_EXIT				Returned by handlers when the mainloop should exit
+ * HANDLER_DO_NOT_PROPAGATE	Returned by handlers when the event that triggered
+ *							them shouldn't be passed to subsequent event
+ *							handlers.
+ */
+#define HANDLER_NORMAL				0x000000
+#define HANDLER_EXIT				0x000001
+#define HANDLER_DO_NOT_PROPAGATE	0x000002
 
 enum WidgetType {
 	WIDGET_LABEL,
@@ -210,8 +243,9 @@ void cedar_cleanup();
  * Initialize a window
  *
  * window		The window to initialize.
+ * handler		A handler for the window's events
  */
-void cedar_initWindow(Window *window);
+void cedar_initWindow(Window *window, WindowEventHandler *handler);
 
 /*
  * Clean up after a window
@@ -219,6 +253,11 @@ void cedar_initWindow(Window *window);
  * window		The window to clean up.
  */
 void cedar_destroyWindow(Window *window);
+
+/*
+ * The default window event handler
+ */
+uint24_t defaultWindowEventHandler(Window *window, int event);
 
 /*
  * Display a window.
@@ -251,6 +290,11 @@ void cedar_destroyWidget(Widget *widget);
  */
 void cedar_setMenu(Window *window, Menu *menu);
 
+/*
+ * Initialize a menu
+ *
+ * menu			The menu to initialize
+ */
 void cedar_initMenu(Menu *menu);
 
 /*

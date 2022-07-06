@@ -13,7 +13,7 @@ int main() {
 	cedar_init();
 
 	Window window;
-	cedar_initWindow(&window);
+	cedar_initWindow(&window, defaultWindowEventHandler);
 
 	// Add menu
 	Menu menu;

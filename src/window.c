@@ -18,7 +18,7 @@ bool key_2nd = false;
 bool key_alpha = false;
 bool alphaLock = false;
 
-void cedar_initWindow(Window *window) {
+void cedar_initWindow(Window *window, WindowEventHandler *handler) {
 	window->widgets.first = NULL;
 	window->widgets.last = NULL;
 	window->widgets.selected = NULL;
@@ -31,6 +31,8 @@ void cedar_initWindow(Window *window) {
 	window->projLeft = 0;
 	window->width = GFX_LCD_WIDTH;
 	window->height = GFX_LCD_HEIGHT;
+
+	window->handler = handler;
 }
 
 void cedar_destroyWindow(Window *window) {
@@ -105,6 +107,8 @@ MenuItem *getLastSelectedMenuItem(Menu *menu) {
 }
 
 int dispatchEvents(Window *window) {
+	uint24_t handlerReturnCode;
+
 	kb_Scan();
 
 	// Check for key events
@@ -128,80 +132,43 @@ int dispatchEvents(Window *window) {
 			key_2nd = false;
 			alphaLock = !alphaLock;
 		}
-	} else if (key_2nd && wasKeyPressed(1, kb_Mode)) {
-		// Quit
-		return 1;
-	} else if (wasKeyPressed(7, kb_Up)) {
-		// Up key pressed
-		if (window->menu) {
-			// Select the first menu item that is not a separator
-			MenuItem *firstItem = window->menu->first;
-
-			while (firstItem != NULL && firstItem->type == MENUITEM_SEPARATOR) {
-				firstItem = firstItem->next;
-			}
-
-			if (firstItem != NULL) {
-				window->menu->selected = firstItem;
-			}
-		}
-	} else if (wasKeyPressed(7, kb_Down)) {
-		// Down key pressed
-		if (window->menu) {
-			window->menu->selected = NULL;
-		}
-	} else if (wasKeyPressed(7, kb_Right)) {
-		// Right key pressed
-		if (window->menu && window->menu->selected) {
-			// Select next menu item that is not a separator
-			MenuItem *nextItem = window->menu->selected->next;
-
-			while (nextItem != NULL && nextItem->type == MENUITEM_SEPARATOR) {
-				nextItem = nextItem->next;
-			}
-
-			if (nextItem != NULL) {
-				window->menu->selected = nextItem;
-			}
-		} else if (window->widgets.selected->next) {
-			// Select next widget
-			window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
-			window->widgets.selected = window->widgets.selected->next;
-			window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
-		}
-	} else if (wasKeyPressed(7, kb_Left)) {
-		// Left key pressed
-		if (window->menu && window->menu->selected) {
-			// Select previous menu item that is not a separator
-			MenuItem *prevItem = window->menu->selected->prev;
-
-			while (prevItem != NULL && prevItem->type == MENUITEM_SEPARATOR) {
-				prevItem = prevItem->prev;
-			}
-
-			if (prevItem != NULL) {
-				window->menu->selected = prevItem;
-			}
-		} else if (window->widgets.selected->prev) {
-			// Select previous widget
-			window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
-			window->widgets.selected = window->widgets.selected->prev;
-			window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
-		}
 	} else {
 		if (keyup) {
+			handlerReturnCode = window->handler(window, EVENT_KEYUP);
+			switch (handlerReturnCode) {
+				case HANDLER_EXIT:
+					return HANDLER_EXIT;
+				case HANDLER_DO_NOT_PROPAGATE:
+					goto dontPropagateKeyup;
+			}
+
 			if (window->menu && window->menu->selected) {
 				// Menu is selected
 			} else {
 				// Menu is not selected
-				window->widgets.selected->handler(window->widgets.selected, EVENT_KEYUP);
+				handlerReturnCode = window->widgets.selected->handler(window->widgets.selected, EVENT_KEYUP);
+				switch (handlerReturnCode) {
+					case HANDLER_EXIT:
+						return HANDLER_EXIT;
+					case HANDLER_DO_NOT_PROPAGATE:
+						goto dontPropagateKeyup;
+				}
 			}
 
-			if (!wasKeyPressed(1, kb_2nd)) key_2nd = false;
-			if (!wasKeyPressed(1, kb_Alpha) && !alphaLock) key_alpha = false;
+			dontPropagateKeyup:
+			if (!wasKeyReleased(1, kb_2nd)) key_2nd = false;
+			if (!wasKeyReleased(1, kb_Alpha) && !alphaLock) key_alpha = false;
 		}
 
 		if (keydown) {
+			handlerReturnCode = window->handler(window, EVENT_KEYDOWN);
+			switch (handlerReturnCode) {
+				case HANDLER_EXIT:
+					return HANDLER_EXIT;
+				case HANDLER_DO_NOT_PROPAGATE:
+					goto dontPropagateKeydown;
+			}
+
 			if (window->menu && window->menu->selected) {
 				// Menu is selected
 				if (wasKeyPressed(6, kb_Enter)) {
@@ -215,8 +182,17 @@ int dispatchEvents(Window *window) {
 				}
 			} else {
 				// Menu is not selected
-				window->widgets.selected->handler(window->widgets.selected, EVENT_KEYDOWN);
+				handlerReturnCode = window->widgets.selected->handler(window->widgets.selected, EVENT_KEYDOWN);
+				switch (handlerReturnCode) {
+					case HANDLER_EXIT:
+						return HANDLER_EXIT;
+					case HANDLER_DO_NOT_PROPAGATE:
+						goto dontPropagateKeydown;
+				}
 			}
+
+			dontPropagateKeydown:
+			;
 		}
 	}
 
@@ -228,17 +204,31 @@ int dispatchEvents(Window *window) {
 }
 
 int cedar_display(Window *window) {
-	// Previous state of the keyboard
+	uint24_t handlerReturnCode;
+
+	handlerReturnCode = window->handler(window, EVENT_CREATE);
+	if (handlerReturnCode == HANDLER_EXIT) {
+		return HANDLER_EXIT;
+	}
+
 	window->widgets.selected = window->widgets.first;
+
+	DBGPRINT("Initialized\n");
 
 	for (;;) {
 		/* Dispatch events */
-		{
-			int eventCode = dispatchEvents(window);
-			if (eventCode) return eventCode;
-		}
+		handlerReturnCode = dispatchEvents(window);
+		if (handlerReturnCode != HANDLER_NORMAL) return handlerReturnCode;
 
 		/* Paint */
+		handlerReturnCode = window->handler(window, EVENT_PAINT);
+		switch (handlerReturnCode) {
+			case HANDLER_EXIT:
+				return HANDLER_EXIT;
+			case HANDLER_DO_NOT_PROPAGATE:
+				goto dontPropagatePaint;
+		}
+
 		// Paint widgets
 		for (Widget *widget = window->widgets.first; widget != NULL; widget = widget->next) {
 			if (widget->x >= window->projLeft
@@ -256,7 +246,13 @@ int cedar_display(Window *window) {
 				widget->realY = window->realTop + (widget->y - window->projTop);
 
 				// Draw it
-				widget->handler(widget, EVENT_PAINT);
+				handlerReturnCode = widget->handler(widget, EVENT_PAINT);
+				switch (handlerReturnCode) {
+					case HANDLER_EXIT:
+						return HANDLER_EXIT;
+					case HANDLER_DO_NOT_PROPAGATE:
+						goto dontPropagatePaint;
+				}
 			}
 		}
 
@@ -302,6 +298,107 @@ int cedar_display(Window *window) {
 			paintActiveSubmenus(window->menu);
 		}
 
+		dontPropagatePaint:
 		gfx_SwapDraw();
 	}
+}
+
+
+uint24_t defaultWindowEventHandler(Window *window, int event) {
+	uint24_t handlerReturnCode;
+
+	switch (event) {
+		case EVENT_KEYDOWN:
+			DBGPRINT("Keydown\n");
+			if (key_2nd && wasKeyPressed(1, kb_Mode)) {
+				// Quit
+				return HANDLER_EXIT;
+			} else if (wasKeyPressed(7, kb_Up)) {
+				// Up arrow key pressed
+				if (window->menu) {
+					// Select the first menu item that is not a separator
+					MenuItem *firstItem = window->menu->first;
+
+					while (firstItem != NULL && firstItem->type == MENUITEM_SEPARATOR) {
+						firstItem = firstItem->next;
+					}
+
+					if (firstItem != NULL) {
+						window->menu->selected = firstItem;
+					}
+				}
+
+				return HANDLER_DO_NOT_PROPAGATE;
+			} else if (wasKeyPressed(7, kb_Down)) {
+				// Down arrow key pressed
+				if (window->menu) {
+					window->menu->selected = NULL;
+				}
+
+				return HANDLER_DO_NOT_PROPAGATE;
+			} else if (wasKeyPressed(7, kb_Right)) {
+				// Right arrow key pressed
+				if (window->menu && window->menu->selected) {
+					// Select next menu item that is not a separator
+					MenuItem *nextItem = window->menu->selected->next;
+
+					while (nextItem != NULL && nextItem->type == MENUITEM_SEPARATOR) {
+						nextItem = nextItem->next;
+					}
+
+					if (nextItem != NULL) {
+						window->menu->selected = nextItem;
+					}
+				} else if (window->widgets.selected->next) {
+					// Select next widget
+					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
+					switch (handlerReturnCode) {
+						case HANDLER_EXIT:
+							return HANDLER_EXIT;
+					}
+
+					window->widgets.selected = window->widgets.selected->next;
+					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+					switch (handlerReturnCode) {
+						case HANDLER_EXIT:
+							return HANDLER_EXIT;
+					}
+				}
+
+				return HANDLER_DO_NOT_PROPAGATE;
+			} else if (wasKeyPressed(7, kb_Left)) {
+				// Left arrow key pressed
+				if (window->menu && window->menu->selected) {
+					// Select previous menu item that is not a separator
+					MenuItem *prevItem = window->menu->selected->prev;
+
+					while (prevItem != NULL && prevItem->type == MENUITEM_SEPARATOR) {
+						prevItem = prevItem->prev;
+					}
+
+					if (prevItem != NULL) {
+						window->menu->selected = prevItem;
+					}
+				} else if (window->widgets.selected->prev) {
+					// Select previous widget
+					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
+					switch (handlerReturnCode) {
+						case HANDLER_EXIT:
+							return HANDLER_EXIT;
+					}
+
+					window->widgets.selected = window->widgets.selected->prev;
+					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+					switch (handlerReturnCode) {
+						case HANDLER_EXIT:
+							return HANDLER_EXIT;
+					}
+				}
+
+				return HANDLER_DO_NOT_PROPAGATE;
+			}
+			break;
+	}
+
+	return HANDLER_NORMAL;
 }
