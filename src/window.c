@@ -12,6 +12,12 @@
 
 #include "cedardbg.h"
 
+uint16_t prevKbState[8] = { 0 };
+
+bool key_2nd = false;
+bool key_alpha = false;
+bool alphaLock = false;
+
 void cedar_initWindow(Window *window) {
 	window->widgets.first = NULL;
 	window->widgets.last = NULL;
@@ -54,10 +60,6 @@ void cedar_addWidget(Window *window, Widget *widget) {
 		window->widgets.last = widget;
 	}
 }
-
-bool key_2nd = false;
-bool key_alpha = false;
-bool alphaLock = false;
 
 /*
  * Blanks an portion of the drawing buffer
@@ -102,136 +104,139 @@ MenuItem *getLastSelectedMenuItem(Menu *menu) {
 	}
 }
 
+int dispatchEvents(Window *window) {
+	kb_Scan();
+
+	// Check for key events
+	bool keydown = false, keyup = false;
+	for (int i=1; i < 8; ++i) {
+		if ((prevKbState[i] & kb_Data[i]) != prevKbState[i]) {
+			// Not all keys previously pressed are still pressed (keyup)
+			keyup = true;
+		} else if ((prevKbState[i] & kb_Data[i]) != kb_Data[i]) {
+			// Not all keys currently pressed were previously pressed (keydown)
+			keydown = true;
+		}
+	}
+
+	if (wasKeyPressed(1, kb_2nd)) {
+		key_2nd = !key_2nd;
+	} else if (wasKeyPressed(2, kb_Alpha)) {
+		key_alpha = !key_alpha;
+
+		if (key_2nd) {
+			key_2nd = false;
+			alphaLock = !alphaLock;
+		}
+	} else if (key_2nd && wasKeyPressed(1, kb_Mode)) {
+		// Quit
+		return 1;
+	} else if (wasKeyPressed(7, kb_Up)) {
+		// Up key pressed
+		if (window->menu) {
+			// Select the first menu item that is not a separator
+			MenuItem *firstItem = window->menu->first;
+
+			while (firstItem != NULL && firstItem->type == MENUITEM_SEPARATOR) {
+				firstItem = firstItem->next;
+			}
+
+			if (firstItem != NULL) {
+				window->menu->selected = firstItem;
+			}
+		}
+	} else if (wasKeyPressed(7, kb_Down)) {
+		// Down key pressed
+		if (window->menu) {
+			window->menu->selected = NULL;
+		}
+	} else if (wasKeyPressed(7, kb_Right)) {
+		// Right key pressed
+		if (window->menu && window->menu->selected) {
+			// Select next menu item that is not a separator
+			MenuItem *nextItem = window->menu->selected->next;
+
+			while (nextItem != NULL && nextItem->type == MENUITEM_SEPARATOR) {
+				nextItem = nextItem->next;
+			}
+
+			if (nextItem != NULL) {
+				window->menu->selected = nextItem;
+			}
+		} else if (window->widgets.selected->next) {
+			// Select next widget
+			window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
+			window->widgets.selected = window->widgets.selected->next;
+			window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+		}
+	} else if (wasKeyPressed(7, kb_Left)) {
+		// Left key pressed
+		if (window->menu && window->menu->selected) {
+			// Select previous menu item that is not a separator
+			MenuItem *prevItem = window->menu->selected->prev;
+
+			while (prevItem != NULL && prevItem->type == MENUITEM_SEPARATOR) {
+				prevItem = prevItem->prev;
+			}
+
+			if (prevItem != NULL) {
+				window->menu->selected = prevItem;
+			}
+		} else if (window->widgets.selected->prev) {
+			// Select previous widget
+			window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
+			window->widgets.selected = window->widgets.selected->prev;
+			window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+		}
+	} else {
+		if (keyup) {
+			if (window->menu && window->menu->selected) {
+				// Menu is selected
+			} else {
+				// Menu is not selected
+				window->widgets.selected->handler(window->widgets.selected, EVENT_KEYUP);
+			}
+
+			if (!wasKeyPressed(1, kb_2nd)) key_2nd = false;
+			if (!wasKeyPressed(1, kb_Alpha) && !alphaLock) key_alpha = false;
+		}
+
+		if (keydown) {
+			if (window->menu && window->menu->selected) {
+				// Menu is selected
+				if (wasKeyPressed(6, kb_Enter)) {
+					MenuItem *selected = getLastSelectedMenuItem(window->menu);
+
+					if (selected->type == MENUITEM_BUTTON) {
+						selected->handler(window->menu);
+					} else if (selected->type == MENUITEM_PARENT && selected->submenu != NULL) {
+						selected->submenu->submenuActive = true;
+					}
+				}
+			} else {
+				// Menu is not selected
+				window->widgets.selected->handler(window->widgets.selected, EVENT_KEYDOWN);
+			}
+		}
+	}
+
+	// store current kb_Data for next check
+	// (kb_Data definition is a little weird so we use the address from keypadc.h)
+	memcpy(prevKbState, (void *)0xF50010, sizeof(uint16_t) * 8);
+
+	return 0;
+}
+
 int cedar_display(Window *window) {
 	// Previous state of the keyboard
-	uint16_t prevKbState[8] = { 0 };
-
 	window->widgets.selected = window->widgets.first;
 
 	for (;;) {
 		/* Dispatch events */
-		kb_Scan();
-
-		// Check for key events
-		bool keydown = false, keyup = false;
-		for (int i=1; i < 8; ++i) {
-			if (!keyup && (prevKbState[i] & kb_Data[i]) != prevKbState[i]) {
-				// Not all keys previously pressed are still pressed (keyup)
-				keyup = true;
-			} else if (!keydown && (prevKbState[i] & kb_Data[i]) != kb_Data[i]) {
-				// Not all keys currently pressed were previously pressed (keydown)
-				keydown = true;
-			}
+		{
+			int eventCode = dispatchEvents(window);
+			if (eventCode) return eventCode;
 		}
-
-		if (keydown && (kb_Data[1] & kb_2nd)) {
-			key_2nd = !key_2nd;
-		} else if (keydown && (kb_Data[2] & kb_Alpha)) {
-			key_alpha = !key_alpha;
-
-			if (key_2nd) {
-				key_2nd = false;
-				alphaLock = !alphaLock;
-			}
-		} else {
-			if (keydown && key_2nd && (kb_Data[1] & kb_Mode)) {
-				// Quit
-				return 0;
-			} else if (keydown && (kb_Data[7] & kb_Up)) {
-				// Up key pressed
-				if (window->menu) {
-					// Select the first menu item that is not a separator
-					MenuItem *firstItem = window->menu->first;
-
-					while (firstItem != NULL && firstItem->type == MENUITEM_SEPARATOR) {
-						firstItem = firstItem->next;
-					}
-
-					if (firstItem != NULL) {
-						window->menu->selected = firstItem;
-					}
-				}
-			} else if (keydown && (kb_Data[7] & kb_Down)) {
-				// Down key pressed
-				if (window->menu) {
-					window->menu->selected = NULL;
-				}
-			} else if (keydown && (kb_Data[7] & kb_Right)) {
-				// Right key pressed
-				if (window->menu && window->menu->selected) {
-					// Select next menu item that is not a separator
-					MenuItem *nextItem = window->menu->selected->next;
-
-					while (nextItem != NULL && nextItem->type == MENUITEM_SEPARATOR) {
-						nextItem = nextItem->next;
-					}
-
-					if (nextItem != NULL) {
-						window->menu->selected = nextItem;
-					}
-				} else if (window->widgets.selected->next) {
-					// Select next widget
-					window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
-					window->widgets.selected = window->widgets.selected->next;
-					window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
-				}
-			} else if (keydown && (kb_Data[7] & kb_Left)) {
-				// Left key pressed
-				if (window->menu && window->menu->selected) {
-					// Select previous menu item that is not a separator
-					MenuItem *prevItem = window->menu->selected->prev;
-
-					while (prevItem != NULL && prevItem->type == MENUITEM_SEPARATOR) {
-						prevItem = prevItem->prev;
-					}
-
-					if (prevItem != NULL) {
-						window->menu->selected = prevItem;
-					}
-				} else if (window->widgets.selected->prev) {
-					// Select previous widget
-					window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
-					window->widgets.selected = window->widgets.selected->prev;
-					window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
-				}
-			} else {
-				if (keyup) {
-					DBGPRINT("Keyup\n");
-					if (!window->menu || !window->menu->selected) {
-						// Menu is not selected
-						window->widgets.selected->handler(window->widgets.selected, EVENT_KEYUP);
-
-						// check special keys
-						if (!(prevKbState[1] & kb_2nd)) key_2nd = false;
-						if (!(prevKbState[2] & kb_Alpha) && !alphaLock) key_alpha = false;
-					}
-				}
-
-				if (keydown) {
-					DBGPRINT("Keydown\n");
-					if (!window->menu || !window->menu->selected) {
-						window->widgets.selected->handler(window->widgets.selected, EVENT_KEYDOWN);
-					} else {
-						// Menu is selected
-						if (kb_Data[6] & kb_Enter) {
-							DBGPRINT("Menu item selected");
-
-							MenuItem *selected = getLastSelectedMenuItem(window->menu);
-
-							if (selected->type == MENUITEM_BUTTON) {
-								selected->handler(window->menu);
-							} else if (selected->type == MENUITEM_PARENT && selected->submenu != NULL) {
-								selected->submenu->submenuActive = true;
-							}
-						}
-					}
-				}
-			}
-		}
-
-		// store current kb_Data for next check
-		// (kb_Data definition is a little weird so we use the address from keypadc.h)
-		memcpy(prevKbState, (void *)0xF50010, sizeof(uint16_t) * 8);
 
 		/* Paint */
 		// Paint widgets

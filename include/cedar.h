@@ -99,12 +99,13 @@ struct Window {
  * EVENT_KEYUP		Fired when a button is released
  * EVENT_SCROLL		Fired when a component's container scrolls
  */
-#define EVENT_PAINT			0x0001
-#define EVENT_FOCUS			0x0002
-#define EVENT_BLUR			0x0003
-#define EVENT_KEYDOWN		0x0004
-#define EVENT_KEYUP			0x0005
-#define EVENT_SCROLL		0x0006
+#define EVENT_DESTROY		0x0001
+#define EVENT_PAINT			0x0002
+#define EVENT_FOCUS			0x0003
+#define EVENT_BLUR			0x0004
+#define EVENT_KEYDOWN		0x0005
+#define EVENT_KEYUP			0x0006
+#define EVENT_SCROLL		0x0007
 
 enum WidgetType {
 	WIDGET_LABEL,
@@ -278,9 +279,14 @@ void cedar_addMenuItem(Menu *menu, const char *label, MenuSelectHandler *handler
 void cedar_addSubmenu(Menu *parent, const char *label, Menu *submenu);
 
 #ifndef _NOEXTERN
+extern uint16_t prevKbState[8];
+
 extern bool key_2nd;
 extern bool key_alpha;
 extern bool alphaLock;
 #endif  // _NOEXTERN
+
+#define wasKeyPressed(group, key)	(!(prevKbState[group] & key) && (kb_Data[group] & key))
+#define wasKeyReleased(group, key)	((prevKbState[group] & key) && !(kb_Data[group] & key))
 
 #endif  // _LIBCEDAR_H_
