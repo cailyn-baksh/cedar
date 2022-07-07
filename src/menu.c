@@ -11,13 +11,15 @@ void cedar_initMenu(Menu *menu) {
 	menu->first = NULL;
 	menu->last = NULL;
 	menu->selected = NULL;
-	menu->submenuActive = false;
+	menu->active = false;
 }
 
 void cedar_addMenuSeparator(Menu *menu) {
 	MenuItem *item = malloc(sizeof(MenuItem));
 
 	item->type = MENUITEM_SEPARATOR;
+	item->parent = menu;
+
 	item->next = NULL;
 	item->prev = menu->last;
 	menu->last = item;
@@ -35,6 +37,7 @@ void cedar_addMenuItem(Menu *parent, const char *label, MenuSelectHandler *handl
 	item->label[11] = '\0';
 
 	item->handler = handler;
+	item->parent = parent;
 
 	item->next = NULL;
 	item->prev = parent->last;
@@ -53,6 +56,7 @@ void cedar_addSubmenu(Menu *parent, const char *label, Menu *submenu) {
 	item->label[11] = '\0';
 
 	item->submenu = submenu;
+	item->parent = parent;
 
 	item->next = NULL;
 	item->prev = parent->last;

@@ -118,13 +118,13 @@ struct Window {
 #define EVENT_BLUR					0x000005
 #define EVENT_KEYDOWN				0x000006
 #define EVENT_KEYUP					0x000007
-#define EVENT_ENABLE
-#define EVENT_DISABLE
-#define EVENT_MENUSELECT
-#define EVENT_HOTKEY
-#define EVENT_TICK
-#define EVENT_VSCROLL
-#define EVENT_HSCROLL
+#define EVENT_ENABLE				0x000008
+#define EVENT_DISABLE				0x000009
+#define EVENT_MENUSELECT			0x00000A
+#define EVENT_HOTKEY				0x00000B
+#define EVENT_TICK					0x00000C
+#define EVENT_VSCROLL				0x00000D
+#define EVENT_HSCROLL				0x00000E
 
 
 /*
@@ -188,6 +188,9 @@ struct Widget {
 
 #define MENUBAR_HEIGHT 20
 
+#define MENU_DROPDOWN_WIDTH 100
+#define MENU_DROPDOWN_HEIGHT (GFX_LCD_HEIGHT - MENUBAR_HEIGHT - 5)
+
 /*
  * A menu
  *
@@ -201,7 +204,7 @@ struct Menu {
 	MenuItem *first;
 	MenuItem *last;
 	MenuItem *selected;
-	bool submenuActive;
+	bool active;
 };
 
 /*
@@ -224,6 +227,7 @@ struct MenuItem {
 		MENUITEM_SEPARATOR
 	} type;
 
+	Menu *parent;
 	MenuItem *next;
 	MenuItem *prev;
 

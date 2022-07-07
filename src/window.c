@@ -10,6 +10,7 @@
 #include "cedar.h"
 #undef _NOEXTERN
 
+#include <assert.h>
 #include "cedardbg.h"
 
 uint16_t prevKbState[8] = { 0 };
@@ -76,19 +77,41 @@ void clearRect(int x, int y, int width, int height) {
  * Paint active submenus.
  */
 void paintActiveSubmenus(Menu *menu) {
-	if (menu->submenuActive && menu->selected && menu->selected->type == MENUITEM_PARENT) {
-		if (menu->selected->submenu->submenuActive) {
+	if (menu->selected && menu->selected->type == MENUITEM_PARENT && menu->selected->submenu->active) {
+		// Submenu is active
+		Menu *activeMenu = menu->selected->submenu;
+
+		if (activeMenu->selected->type == MENUITEM_PARENT && activeMenu->selected->submenu->active) {
 			// Paint a submenu of this submenu
-			paintActiveSubmenus(menu->selected->submenu);
+			paintActiveSubmenus(activeMenu);
 		} else {
 			// Paint this submenu
-			gfx_Rectangle(5, MENUBAR_HEIGHT, 50, GFX_LCD_HEIGHT - MENUBAR_HEIGHT);
+			gfx_FillRectangle(7, MENUBAR_HEIGHT+2, MENU_DROPDOWN_WIDTH, MENU_DROPDOWN_HEIGHT);  // shadow :)
+			clearRect(5, MENUBAR_HEIGHT, MENU_DROPDOWN_WIDTH, MENU_DROPDOWN_HEIGHT);
+			gfx_Rectangle(5, MENUBAR_HEIGHT, MENU_DROPDOWN_WIDTH, MENU_DROPDOWN_HEIGHT);
 
-			for (MenuItem *current=menu->first; current != NULL; current = current->next) {
+			int submenuItemY = MENUBAR_HEIGHT + 5;
+
+			for (MenuItem *current=activeMenu->first; current != NULL; current = current->next) {
 				if (current->type == MENUITEM_SEPARATOR) {
-
+					gfx_HorizLine(5, submenuItemY+4, MENU_DROPDOWN_WIDTH);
+					submenuItemY += 10;
 				} else {
+					if (current == activeMenu->selected) {  // pointer comparison
+						gfx_FillRectangle(5, submenuItemY-2, MENU_DROPDOWN_WIDTH, 12);
 
+						gfx_SetTextFGColor(255);
+						gfx_SetTextBGColor(0);
+						gfx_SetTextTransparentColor(0);
+						gfx_PrintStringXY(current->label, 10, submenuItemY);
+						gfx_SetTextFGColor(0);
+						gfx_SetTextBGColor(255);
+						gfx_SetTextTransparentColor(255);
+					} else {
+						gfx_PrintStringXY(current->label, 10, submenuItemY);
+					}
+
+					submenuItemY += 10;
 				}
 			}
 		}
@@ -99,7 +122,8 @@ void paintActiveSubmenus(Menu *menu) {
  * Returns the last selected menu item in a menu
  */
 MenuItem *getLastSelectedMenuItem(Menu *menu) {
-	if (menu->submenuActive) {
+	if (menu->selected && menu->selected->type == MENUITEM_PARENT && menu->selected->submenu->active) {
+		// Return selected item in submenu
 		return getLastSelectedMenuItem(menu->selected->submenu);
 	} else {
 		return menu->selected;
@@ -177,7 +201,7 @@ int dispatchEvents(Window *window) {
 					if (selected->type == MENUITEM_BUTTON) {
 						selected->handler(window->menu);
 					} else if (selected->type == MENUITEM_PARENT && selected->submenu != NULL) {
-						selected->submenu->submenuActive = true;
+						selected->submenu->active = true;
 					}
 				}
 			} else {
@@ -212,8 +236,6 @@ int cedar_display(Window *window) {
 	}
 
 	window->widgets.selected = window->widgets.first;
-
-	DBGPRINT("Initialized\n");
 
 	for (;;) {
 		/* Dispatch events */
@@ -303,28 +325,80 @@ int cedar_display(Window *window) {
 	}
 }
 
+MenuItem *getNextSelectableMenuitem(Menu *menu) {
+	MenuItem *item = menu->selected->next;
+
+	while (item != NULL && item->type == MENUITEM_SEPARATOR) {
+		item = item->next;
+	}
+
+	return item;
+}
+
+MenuItem *getPrevSelectableMenuitem(Menu *menu) {
+	MenuItem *item = menu->selected->prev;
+
+	while (item != NULL && item->type == MENUITEM_SEPARATOR) {
+		item = item->prev;
+	}
+
+	return item;
+}
+
+uint24_t deselectSubmenuTree(Menu *root) {
+	uint24_t submenusClosed = 1;
+
+	if (root->selected != NULL && root->selected->type == MENUITEM_PARENT && root->selected->submenu->active) {
+		root->selected->submenu->selected = NULL;
+		submenusClosed += deselectSubmenuTree(root->selected->submenu);
+	}
+	root->active = false;
+
+	return submenusClosed;
+}
 
 uint24_t defaultWindowEventHandler(Window *window, int event) {
+	static uint8_t blankScreenThisFrame = 0;
 	uint24_t handlerReturnCode;
 
 	switch (event) {
+		case EVENT_PAINT:
+			if (blankScreenThisFrame > 0) {
+				gfx_FillScreen(255);
+				--blankScreenThisFrame;
+			}
+			break;
 		case EVENT_KEYDOWN:
-			DBGPRINT("Keydown\n");
 			if (key_2nd && wasKeyPressed(1, kb_Mode)) {
 				// Quit
 				return HANDLER_EXIT;
 			} else if (wasKeyPressed(7, kb_Up)) {
 				// Up arrow key pressed
 				if (window->menu) {
-					// Select the first menu item that is not a separator
-					MenuItem *firstItem = window->menu->first;
+					if (window->menu->selected->type == MENUITEM_PARENT && window->menu->selected->submenu->active) {
+						// A submenu is active
+						Menu *submenu = getLastSelectedMenuItem(window->menu)->parent;
+						MenuItem *prevItem = getPrevSelectableMenuitem(submenu);
 
-					while (firstItem != NULL && firstItem->type == MENUITEM_SEPARATOR) {
-						firstItem = firstItem->next;
-					}
+						if (prevItem != NULL) {
+							// Select previous submenu item
+							submenu->selected = prevItem;
+						} else {
+							window->menu->selected->submenu->active = false;
+							deselectSubmenuTree(window->menu);
+							blankScreenThisFrame = 2;  // Clear buffer and next buffer
+						}
+					} else {
+						// Select the first menu item that is not a separator
+						MenuItem *firstItem = window->menu->first;
 
-					if (firstItem != NULL) {
-						window->menu->selected = firstItem;
+						while (firstItem != NULL && firstItem->type == MENUITEM_SEPARATOR) {
+							firstItem = firstItem->next;
+						}
+
+						if (firstItem != NULL) {
+							window->menu->selected = firstItem;
+						}
 					}
 				}
 
@@ -332,7 +406,17 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 			} else if (wasKeyPressed(7, kb_Down)) {
 				// Down arrow key pressed
 				if (window->menu) {
-					window->menu->selected = NULL;
+					if (window->menu->selected->type == MENUITEM_PARENT && window->menu->selected->submenu->active) {
+						// A submenu is active
+						Menu *submenu = getLastSelectedMenuItem(window->menu)->parent;
+						MenuItem *nextItem = getNextSelectableMenuitem(submenu);
+
+						if (nextItem != NULL) {
+							submenu->selected = nextItem;
+						}
+					} else {
+						window->menu->selected = NULL;
+					}
 				}
 
 				return HANDLER_DO_NOT_PROPAGATE;
@@ -340,11 +424,11 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 				// Right arrow key pressed
 				if (window->menu && window->menu->selected) {
 					// Select next menu item that is not a separator
-					MenuItem *nextItem = window->menu->selected->next;
-
-					while (nextItem != NULL && nextItem->type == MENUITEM_SEPARATOR) {
-						nextItem = nextItem->next;
+					if (deselectSubmenuTree(window->menu) > 1) {
+						blankScreenThisFrame = 2;
 					}
+
+					MenuItem *nextItem = getNextSelectableMenuitem(window->menu);
 
 					if (nextItem != NULL) {
 						window->menu->selected = nextItem;
@@ -370,11 +454,11 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 				// Left arrow key pressed
 				if (window->menu && window->menu->selected) {
 					// Select previous menu item that is not a separator
-					MenuItem *prevItem = window->menu->selected->prev;
-
-					while (prevItem != NULL && prevItem->type == MENUITEM_SEPARATOR) {
-						prevItem = prevItem->prev;
+					if (deselectSubmenuTree(window->menu) > 1) {
+						blankScreenThisFrame = 2;
 					}
+
+					MenuItem *prevItem = getPrevSelectableMenuitem(window->menu);
 
 					if (prevItem != NULL) {
 						window->menu->selected = prevItem;
@@ -395,6 +479,25 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 					}
 				}
 
+				return HANDLER_DO_NOT_PROPAGATE;
+			} else if (window->menu->selected && wasKeyPressed(6, kb_Enter)) {
+				// Selecting a menu item
+				MenuItem *lastSelected = getLastSelectedMenuItem(window->menu);
+
+				switch (lastSelected->type) {
+					case MENUITEM_BUTTON:
+						handlerReturnCode = window->handler(window, EVENT_MENUSELECT);
+						switch (handlerReturnCode) {
+							case HANDLER_EXIT:
+								return HANDLER_EXIT;
+						}
+						break;
+					case MENUITEM_PARENT:
+						lastSelected->submenu->active = true;
+						lastSelected->submenu->selected = lastSelected->submenu->first;
+						break;
+				}
+				
 				return HANDLER_DO_NOT_PROPAGATE;
 			}
 			break;

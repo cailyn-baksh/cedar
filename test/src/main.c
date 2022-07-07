@@ -1,11 +1,11 @@
 #include <cedar.h>
 #include <cedar/label.h>
 
-int menuAboutSelectHandler() {
+uint24_t menuAboutSelectHandler() {
 	return 0;
 }
 
-int menuExitSelectHandler() {
+uint24_t menuExitSelectHandler() {
 	return 0;
 }
 

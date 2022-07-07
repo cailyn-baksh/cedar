@@ -10,6 +10,7 @@
 #define DBGPRINT(...) dbg_printf(__VA_ARGS__)
 #else
 #define DBGPRINT
+#define NDEBUG
 #endif  // DEBUG
 
 #endif  // _CEDARDBG_H_
