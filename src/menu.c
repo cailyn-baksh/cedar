@@ -28,15 +28,15 @@ void cedar_addMenuSeparator(Menu *menu) {
 	if (menu->first == NULL) menu->first = item;
 }
 
-void cedar_addMenuItem(Menu *parent, const char *label, MenuSelectHandler *handler) {
+void cedar_addMenuItem(Menu *parent, const char *label, unsigned int buttonID) {
 	MenuItem *item = malloc(sizeof(MenuItem));
 
 	item->type = MENUITEM_BUTTON;
 
 	strncpy(item->label, label, 11);
 	item->label[11] = '\0';
+	item->buttonID = buttonID;
 
-	item->handler = handler;
 	item->parent = parent;
 
 	item->next = NULL;
@@ -47,7 +47,7 @@ void cedar_addMenuItem(Menu *parent, const char *label, MenuSelectHandler *handl
 	if (parent->first == NULL) parent->first = item;
 }
 
-void cedar_addSubmenu(Menu *parent, const char *label, Menu *submenu) {
+void cedar_addSubmenu(Menu *parent, const char *label, Menu *child) {
 	MenuItem *item = malloc(sizeof(MenuItem));
 
 	item->type = MENUITEM_PARENT;
@@ -55,7 +55,7 @@ void cedar_addSubmenu(Menu *parent, const char *label, Menu *submenu) {
 	strncpy(item->label, label, 11);
 	item->label[11] = '\0';
 
-	item->submenu = submenu;
+	item->child = child;
 	item->parent = parent;
 
 	item->next = NULL;

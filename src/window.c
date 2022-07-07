@@ -77,11 +77,11 @@ void clearRect(int x, int y, int width, int height) {
  * Paint active submenus.
  */
 void paintActiveSubmenus(Menu *menu) {
-	if (menu->selected && menu->selected->type == MENUITEM_PARENT && menu->selected->submenu->active) {
+	if (menu->selected && menu->selected->type == MENUITEM_PARENT && menu->selected->child->active) {
 		// Submenu is active
-		Menu *activeMenu = menu->selected->submenu;
+		Menu *activeMenu = menu->selected->child;
 
-		if (activeMenu->selected->type == MENUITEM_PARENT && activeMenu->selected->submenu->active) {
+		if (activeMenu->selected->type == MENUITEM_PARENT && activeMenu->selected->child->active) {
 			// Paint a submenu of this submenu
 			paintActiveSubmenus(activeMenu);
 		} else {
@@ -122,9 +122,9 @@ void paintActiveSubmenus(Menu *menu) {
  * Returns the last selected menu item in a menu
  */
 MenuItem *getLastSelectedMenuItem(Menu *menu) {
-	if (menu->selected && menu->selected->type == MENUITEM_PARENT && menu->selected->submenu->active) {
+	if (menu->selected && menu->selected->type == MENUITEM_PARENT && menu->selected->child->active) {
 		// Return selected item in submenu
-		return getLastSelectedMenuItem(menu->selected->submenu);
+		return getLastSelectedMenuItem(menu->selected->child);
 	} else {
 		return menu->selected;
 	}
@@ -198,10 +198,20 @@ int dispatchEvents(Window *window) {
 				if (wasKeyPressed(6, kb_Enter)) {
 					MenuItem *selected = getLastSelectedMenuItem(window->menu);
 
-					if (selected->type == MENUITEM_BUTTON) {
-						selected->handler(window->menu);
-					} else if (selected->type == MENUITEM_PARENT && selected->submenu != NULL) {
-						selected->submenu->active = true;
+					switch (selected->type) {
+						case MENUITEM_BUTTON:
+							handlerReturnCode = window->handler(window, EVENT_MENUSELECT);
+							switch (handlerReturnCode) {
+								case HANDLER_EXIT:
+									return HANDLER_EXIT;
+							}
+							break;
+						case MENUITEM_PARENT:
+							if (selected->child != NULL) {
+								selected->child->active = true;
+								selected->child->selected = selected->child->first;
+							}
+							break;
 					}
 				}
 			} else {
@@ -348,9 +358,9 @@ MenuItem *getPrevSelectableMenuitem(Menu *menu) {
 uint24_t deselectSubmenuTree(Menu *root) {
 	uint24_t submenusClosed = 1;
 
-	if (root->selected != NULL && root->selected->type == MENUITEM_PARENT && root->selected->submenu->active) {
-		root->selected->submenu->selected = NULL;
-		submenusClosed += deselectSubmenuTree(root->selected->submenu);
+	if (root->selected != NULL && root->selected->type == MENUITEM_PARENT && root->selected->child->active) {
+		root->selected->child->selected = NULL;
+		submenusClosed += deselectSubmenuTree(root->selected->child);
 	}
 	root->active = false;
 
@@ -375,7 +385,7 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 			} else if (wasKeyPressed(7, kb_Up)) {
 				// Up arrow key pressed
 				if (window->menu) {
-					if (window->menu->selected->type == MENUITEM_PARENT && window->menu->selected->submenu->active) {
+					if (window->menu->selected->type == MENUITEM_PARENT && window->menu->selected->child->active) {
 						// A submenu is active
 						Menu *submenu = getLastSelectedMenuItem(window->menu)->parent;
 						MenuItem *prevItem = getPrevSelectableMenuitem(submenu);
@@ -384,7 +394,7 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 							// Select previous submenu item
 							submenu->selected = prevItem;
 						} else {
-							window->menu->selected->submenu->active = false;
+							window->menu->selected->child->active = false;
 							deselectSubmenuTree(window->menu);
 							blankScreenThisFrame = 2;  // Clear buffer and next buffer
 						}
@@ -406,7 +416,7 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 			} else if (wasKeyPressed(7, kb_Down)) {
 				// Down arrow key pressed
 				if (window->menu) {
-					if (window->menu->selected->type == MENUITEM_PARENT && window->menu->selected->submenu->active) {
+					if (window->menu->selected->type == MENUITEM_PARENT && window->menu->selected->child->active) {
 						// A submenu is active
 						Menu *submenu = getLastSelectedMenuItem(window->menu)->parent;
 						MenuItem *nextItem = getNextSelectableMenuitem(submenu);
@@ -479,25 +489,6 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 					}
 				}
 
-				return HANDLER_DO_NOT_PROPAGATE;
-			} else if (window->menu->selected && wasKeyPressed(6, kb_Enter)) {
-				// Selecting a menu item
-				MenuItem *lastSelected = getLastSelectedMenuItem(window->menu);
-
-				switch (lastSelected->type) {
-					case MENUITEM_BUTTON:
-						handlerReturnCode = window->handler(window, EVENT_MENUSELECT);
-						switch (handlerReturnCode) {
-							case HANDLER_EXIT:
-								return HANDLER_EXIT;
-						}
-						break;
-					case MENUITEM_PARENT:
-						lastSelected->submenu->active = true;
-						lastSelected->submenu->selected = lastSelected->submenu->first;
-						break;
-				}
-				
 				return HANDLER_DO_NOT_PROPAGATE;
 			}
 			break;

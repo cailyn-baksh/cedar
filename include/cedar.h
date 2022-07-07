@@ -36,11 +36,6 @@ struct MenuItem;
 typedef struct MenuItem MenuItem;
 
 /*
- * Handles a menu button being selected
- */
-typedef uint24_t MenuSelectHandler();
-
-/*
  * Handle events for a widget.
  */
 typedef uint24_t WidgetEventHandler(Widget *widget, int event);
@@ -227,15 +222,15 @@ struct MenuItem {
 		MENUITEM_SEPARATOR
 	} type;
 
-	Menu *parent;
 	MenuItem *next;
 	MenuItem *prev;
 
 	char label[12];
 
+	Menu *parent;
 	union {
-		Menu *submenu;
-		MenuSelectHandler *handler;
+		unsigned int buttonID;
+		Menu *child;
 	};
 };
 
@@ -313,9 +308,9 @@ void cedar_addMenuSeparator(Menu *menu);
  *
  * menu			The menu to add the item to
  * label		The label of the menu. This must be less than 12 characters.
- * handler		The handler to call when the menu item is selected
+ * buttonID		The id of the button
  */
-void cedar_addMenuItem(Menu *menu, const char *label, MenuSelectHandler *handler);
+void cedar_addMenuItem(Menu *menu, const char *label, unsigned int buttonID);
 
 /*
  * Add a submenu to the menu.
@@ -324,7 +319,9 @@ void cedar_addMenuItem(Menu *menu, const char *label, MenuSelectHandler *handler
  * label		The label of the submenu. This must be less than 12 characters.
  * submenu		The child menu to add to the parent menu.
  */
-void cedar_addSubmenu(Menu *parent, const char *label, Menu *submenu);
+void cedar_addSubmenu(Menu *parent, const char *label, Menu *child);
+
+MenuItem *getLastSelectedMenuItem(Menu *menu);
 
 #ifndef _NOEXTERN
 extern uint16_t prevKbState[8];

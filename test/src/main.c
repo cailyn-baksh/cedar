@@ -1,19 +1,28 @@
 #include <cedar.h>
 #include <cedar/label.h>
 
-uint24_t menuAboutSelectHandler() {
-	return 0;
-}
+#define MENUBUTTON_ABOUT	0x1
+#define MENUBUTTON_EXIT		0x2
+#define MENUBUTTON_OTHER	0x3
 
-uint24_t menuExitSelectHandler() {
-	return 0;
+uint24_t mainWindowEventHandler(Window *window, int event) {
+	if (event == EVENT_MENUSELECT) {
+		MenuItem *selected = getLastSelectedMenuItem(window->menu);
+
+		switch (selected->buttonID) {
+			case MENUBUTTON_EXIT:
+				return HANDLER_EXIT;
+		}
+	}
+
+	return defaultWindowEventHandler(window, event);
 }
 
 int main() {
 	cedar_init();
 
 	Window window;
-	cedar_initWindow(&window, defaultWindowEventHandler);
+	cedar_initWindow(&window, mainWindowEventHandler);
 
 	// Add menu
 	Menu menu;
@@ -22,11 +31,11 @@ int main() {
 		Menu prgmMenu;
 		cedar_initMenu(&prgmMenu);
 		cedar_addSubmenu(&menu, "Program", &prgmMenu);
-			cedar_addMenuItem(&prgmMenu, "About", menuAboutSelectHandler);
+			cedar_addMenuItem(&prgmMenu, "About", MENUBUTTON_ABOUT);
 			cedar_addMenuSeparator(&prgmMenu);
-			cedar_addMenuItem(&prgmMenu, "Exit", menuExitSelectHandler);
+			cedar_addMenuItem(&prgmMenu, "Exit", MENUBUTTON_EXIT);
 	cedar_addMenuSeparator(&menu);
-	cedar_addMenuItem(&menu, "Other", menuExitSelectHandler);
+	cedar_addMenuItem(&menu, "Other", MENUBUTTON_OTHER);
 
 	// Add widgets
 	cedar_addWidget(&window, Label(10, 10, 10, 30, "Hello World!"));
