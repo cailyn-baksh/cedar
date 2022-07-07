@@ -162,6 +162,7 @@ enum WidgetType {
  */
 struct Widget {
 	WidgetType type;
+	uint24_t id;
 
 	Widget *prev;
 	Widget *next;
@@ -173,6 +174,8 @@ struct Widget {
 
 	int realX;
 	int realY;
+
+	bool enabled;
 
 	void *data;
 
