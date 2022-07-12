@@ -40,28 +40,27 @@ void cedar_destroyWindow(Window *window) {
 	// Clean up menu bar
 
 	// Clean up widgets
-	if (window->widgets.first != NULL) {
-		do {
-			window->widgets.first->next->handler(window->widgets.first->next,
-												 EVENT_DESTROY);
-			cedar_destroyWidget(window->widgets.first->next);
-		} while (window->widgets.first->next != NULL);
+	for (Widget *current=window->widgets.first; current != NULL; current = current->next) {
+		if (current->prev != NULL) {
+			cedar_destroyWidget(current->prev);
+		}
+		window->widgets.first->next->handler(current,
+											 EVENT_DESTROY);
 	}
 
 	free(window);
 }
 
 void cedar_addWidget(Window *window, Widget *widget) {
-	if (window->widgets.last == NULL) {
+	if (window->widgets.first == NULL) {
 		// This is the first widget
 		window->widgets.first = widget;
-		window->widgets.last = widget;
 	} else {
 		// Not the first widget, link this widget into the list
 		window->widgets.last->next = widget;
 		widget->prev = window->widgets.last;
-		window->widgets.last = widget;
 	}
+	window->widgets.last = widget;
 }
 
 /*
@@ -77,11 +76,14 @@ void clearRect(int x, int y, int width, int height) {
  * Paint active submenus.
  */
 void paintActiveSubmenus(Menu *menu) {
-	if (menu->selected && menu->selected->type == MENUITEM_PARENT && menu->selected->child->active) {
+	if (menu->selected
+	 && menu->selected->type == MENUITEM_PARENT
+	  && menu->selected->child->active) {
 		// Submenu is active
 		Menu *activeMenu = menu->selected->child;
 
-		if (activeMenu->selected->type == MENUITEM_PARENT && activeMenu->selected->child->active) {
+		if (activeMenu->selected->type == MENUITEM_PARENT
+		 && activeMenu->selected->child->active) {
 			// Paint a submenu of this submenu
 			paintActiveSubmenus(activeMenu);
 		} else {
@@ -97,7 +99,10 @@ void paintActiveSubmenus(Menu *menu) {
 					gfx_HorizLine(5, submenuItemY+4, MENU_DROPDOWN_WIDTH);
 					submenuItemY += 10;
 				} else {
-					if (current == activeMenu->selected) {  // pointer comparison
+					if (current->invertColours
+					 ^ ((activeMenu->selected != NULL)
+					   && (current == activeMenu->selected))) {
+						// indicate item is selected
 						gfx_FillRectangle(5, submenuItemY-2, MENU_DROPDOWN_WIDTH, 12);
 
 						gfx_SetTextFGColor(255);
@@ -108,6 +113,10 @@ void paintActiveSubmenus(Menu *menu) {
 						gfx_SetTextBGColor(255);
 						gfx_SetTextTransparentColor(255);
 					} else {
+						if (activeMenu->selected != NULL && current == activeMenu->selected) {
+							// Item is selected but colours are inverted
+							gfx_Rectangle(5, submenuItemY-2, MENU_DROPDOWN_WIDTH, 12);
+						}
 						gfx_PrintStringXY(current->label, 10, submenuItemY);
 					}
 
@@ -122,7 +131,9 @@ void paintActiveSubmenus(Menu *menu) {
  * Returns the last selected menu item in a menu
  */
 MenuItem *getLastSelectedMenuItem(Menu *menu) {
-	if (menu->selected && menu->selected->type == MENUITEM_PARENT && menu->selected->child->active) {
+	if (menu->selected
+	 && menu->selected->type == MENUITEM_PARENT
+	  && menu->selected->child->active) {
 		// Return selected item in submenu
 		return getLastSelectedMenuItem(menu->selected->child);
 	} else {
@@ -133,7 +144,9 @@ MenuItem *getLastSelectedMenuItem(Menu *menu) {
 uint24_t deselectSubmenuTree(Menu *root) {
 	uint24_t submenusClosed = 1;
 
-	if (root->selected != NULL && root->selected->type == MENUITEM_PARENT && root->selected->child->active) {
+	if (root->selected != NULL
+	 && root->selected->type == MENUITEM_PARENT
+	  && root->selected->child->active) {
 		root->selected->child->selected = NULL;
 		submenusClosed += deselectSubmenuTree(root->selected->child);
 	}
@@ -180,9 +193,31 @@ int dispatchEvents(Window *window) {
 
 			if (window->menu && window->menu->selected) {
 				// Menu is selected
+				if (wasKeyReleased(6, kb_Enter)) {
+					MenuItem *selected = getLastSelectedMenuItem(window->menu);
+
+					selected->invertColours = false;
+
+					switch (selected->type) {
+						case MENUITEM_BUTTON:
+							handlerReturnCode = window->handler(window, EVENT_MENUSELECT);
+							switch (handlerReturnCode) {
+								case HANDLER_EXIT:
+									return HANDLER_EXIT;
+							}
+							break;
+						case MENUITEM_PARENT:
+							if (selected->child != NULL) {
+								selected->child->active = true;
+								selected->child->selected = selected->child->first;
+							}
+							break;
+					}
+				}
 			} else {
 				// Menu is not selected
-				handlerReturnCode = window->widgets.selected->handler(window->widgets.selected, EVENT_KEYUP);
+				handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
+																	  EVENT_KEYUP);
 				switch (handlerReturnCode) {
 					case HANDLER_EXIT:
 						return HANDLER_EXIT;
@@ -210,25 +245,14 @@ int dispatchEvents(Window *window) {
 				if (wasKeyPressed(6, kb_Enter)) {
 					MenuItem *selected = getLastSelectedMenuItem(window->menu);
 
-					switch (selected->type) {
-						case MENUITEM_BUTTON:
-							handlerReturnCode = window->handler(window, EVENT_MENUSELECT);
-							switch (handlerReturnCode) {
-								case HANDLER_EXIT:
-									return HANDLER_EXIT;
-							}
-							break;
-						case MENUITEM_PARENT:
-							if (selected->child != NULL) {
-								selected->child->active = true;
-								selected->child->selected = selected->child->first;
-							}
-							break;
+					if (selected->type != MENUITEM_SEPARATOR) {
+						selected->invertColours = true;
 					}
 				}
 			} else {
 				// Menu is not selected
-				handlerReturnCode = window->widgets.selected->handler(window->widgets.selected, EVENT_KEYDOWN);
+				handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
+																	  EVENT_KEYDOWN);
 				switch (handlerReturnCode) {
 					case HANDLER_EXIT:
 						return HANDLER_EXIT;
@@ -262,7 +286,9 @@ int cedar_display(Window *window) {
 	for (;;) {
 		/* Dispatch events */
 		handlerReturnCode = dispatchEvents(window);
-		if (handlerReturnCode != HANDLER_NORMAL) return handlerReturnCode;
+		if (handlerReturnCode != HANDLER_NORMAL) {
+			return handlerReturnCode;
+		}
 
 		/* Paint */
 		handlerReturnCode = window->handler(window, EVENT_PAINT);
@@ -319,7 +345,10 @@ int cedar_display(Window *window) {
 						break;
 					}
 
-					if (current == window->menu->selected) {  // pointer comparison
+					if (current->invertColours
+					 ^ ((window->menu->selected != NULL)
+					   && (current == window->menu->selected))) {
+						// indicate item is selected
 						gfx_FillRectangle(menubarPaintOffset-2, 3, labelWidth+4, 14);
 
 						gfx_SetTextFGColor(255);
@@ -330,6 +359,10 @@ int cedar_display(Window *window) {
 						gfx_SetTextBGColor(255);
 						gfx_SetTextTransparentColor(255);
 					} else {
+						if (window->menu->selected != NULL && current == window->menu->selected) {
+							// Item is selected but colours are inverted
+							gfx_Rectangle(menubarPaintOffset-2, 3, labelWidth+4, 14);
+						}
 						gfx_PrintStringXY(current->label, menubarPaintOffset, 5);
 					}
 
@@ -385,7 +418,8 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 			} else if (wasKeyPressed(7, kb_Up)) {
 				// Up arrow key pressed
 				if (window->menu) {
-					if (window->menu->selected->type == MENUITEM_PARENT && window->menu->selected->child->active) {
+					if (window->menu->selected->type == MENUITEM_PARENT
+					 && window->menu->selected->child->active) {
 						// A submenu is active
 						Menu *submenu = getLastSelectedMenuItem(window->menu)->parent;
 						MenuItem *prevItem = getPrevSelectableMenuitem(submenu);
@@ -416,7 +450,8 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 			} else if (wasKeyPressed(7, kb_Down)) {
 				// Down arrow key pressed
 				if (window->menu) {
-					if (window->menu->selected->type == MENUITEM_PARENT && window->menu->selected->child->active) {
+					if (window->menu->selected->type == MENUITEM_PARENT
+					 && window->menu->selected->child->active) {
 						// A submenu is active
 						Menu *submenu = getLastSelectedMenuItem(window->menu)->parent;
 						MenuItem *nextItem = getNextSelectableMenuitem(submenu);
@@ -445,14 +480,16 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 					}
 				} else if (window->widgets.selected->next) {
 					// Select next widget
-					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
+					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
+																		  EVENT_BLUR);
 					switch (handlerReturnCode) {
 						case HANDLER_EXIT:
 							return HANDLER_EXIT;
 					}
 
 					window->widgets.selected = window->widgets.selected->next;
-					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
+																		  EVENT_FOCUS);
 					switch (handlerReturnCode) {
 						case HANDLER_EXIT:
 							return HANDLER_EXIT;
@@ -475,14 +512,16 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 					}
 				} else if (window->widgets.selected->prev) {
 					// Select previous widget
-					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
+					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
+																		  EVENT_BLUR);
 					switch (handlerReturnCode) {
 						case HANDLER_EXIT:
 							return HANDLER_EXIT;
 					}
 
 					window->widgets.selected = window->widgets.selected->prev;
-					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
+																		  EVENT_FOCUS);
 					switch (handlerReturnCode) {
 						case HANDLER_EXIT:
 							return HANDLER_EXIT;

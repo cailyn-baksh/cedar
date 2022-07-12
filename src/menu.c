@@ -18,7 +18,9 @@ void cedar_addMenuSeparator(Menu *menu) {
 	MenuItem *item = malloc(sizeof(MenuItem));
 
 	item->type = MENUITEM_SEPARATOR;
+	item->invertColours = false;
 	item->parent = menu;
+
 
 	item->next = NULL;
 	item->prev = menu->last;
@@ -32,6 +34,7 @@ void cedar_addMenuItem(Menu *parent, const char *label, unsigned int buttonID) {
 	MenuItem *item = malloc(sizeof(MenuItem));
 
 	item->type = MENUITEM_BUTTON;
+	item->invertColours = false;
 
 	strncpy(item->label, label, 11);
 	item->label[11] = '\0';
@@ -51,6 +54,7 @@ void cedar_addSubmenu(Menu *parent, const char *label, Menu *child) {
 	MenuItem *item = malloc(sizeof(MenuItem));
 
 	item->type = MENUITEM_PARENT;
+	item->invertColours = false;
 
 	strncpy(item->label, label, 11);
 	item->label[11] = '\0';

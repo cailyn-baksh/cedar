@@ -11,7 +11,7 @@
 // minor version is incremented each release
 // major version is incremented after each breaking change (after major version 1)
 #define LIBCEDAR_MAJOR_VERSION 0
-#define LIBCEDAR_MINOR_VERSION 1
+#define LIBCEDAR_MINOR_VERSION 4
 #define LIBCEDAR_VERSION_STR _LIBCEDAR_QUOTE(LIBCEDAR_MAJOR_VERSION) "." _LIBCEDAR_QUOTE(LIBCEDAR_MINOR_VERSION)
 
 #include <stdbool.h>
@@ -233,6 +233,8 @@ struct MenuItem {
 		unsigned int buttonID;
 		Menu *child;
 	};
+
+	bool invertColours;
 };
 
 void cedar_init();

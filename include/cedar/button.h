@@ -3,6 +3,10 @@
 
 #include <cedar.h>
 
+typedef struct {
+	char *text;
+} ButtonData;
+
 /*
  * A button is a widget which contains text in a box, and which can be clicked
  *
@@ -16,6 +20,6 @@ Widget *Button(int x, int y, int width, int height, const char *text);
 /*
  * The default event handler for label widgets.
  */
-int defaultButtonHandler(Widget *widget, int event);
+uint24_t defaultButtonHandler(Widget *widget, int event);
 
 #endif  // _LIBCEDAR_BUTTON_H_

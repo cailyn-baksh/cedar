@@ -1,4 +1,5 @@
 #include <cedar.h>
+#include <cedar/button.h>
 #include <cedar/label.h>
 
 #define MENUBUTTON_ABOUT	0x1
@@ -40,6 +41,8 @@ int main() {
 	// Add widgets
 	cedar_addWidget(&window, Label(10, 10, 70, 40, "Hello World!"));
 	cedar_addWidget(&window, Label(110, 40, 70, 40, "abcdefghijklmnopqrstuvwxyz"));
+
+	cedar_addWidget(&window, Button(40, 180, 60, 20, "Button!"));
 
 	cedar_display(&window);
 
