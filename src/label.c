@@ -55,6 +55,8 @@ void drawLabelText(Widget *label) {
 						// At end of label, break to next line
 						xOffset = 0;
 						yOffset += 10;
+
+						if (yOffset > label->height) return;  // too tall exit
 					}
 
 					gfx_SetTextXY(label->realX + xOffset, label->realY + yOffset);
@@ -79,12 +81,18 @@ void drawLabelText(Widget *label) {
 			// will break it at the end of the line
 			xOffset = 0;
 			yOffset += 10;
+
+			if (yOffset > label->height) return;  // too tall exit
 		}
 	} while (*(str++));
 }
 
 uint24_t defaultLabelHandler(Widget *widget, int event) {
 	switch (event) {
+		case EVENT_DESTROY:
+			// Clean up widget
+			free(getData(LabelData, widget)->text);
+			break;
 		case EVENT_PAINT:
 			// Paint widget
 			drawLabelText(widget);

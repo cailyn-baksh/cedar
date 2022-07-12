@@ -10,7 +10,6 @@
  * Label data. In label widgets, data points to an instance of this structure.
  */
 typedef struct {
-	size_t nLines;
 	char *text;
 } LabelData;
 

@@ -41,11 +41,11 @@ void cedar_destroyWindow(Window *window) {
 
 	// Clean up widgets
 	if (window->widgets.first != NULL) {
-		while (window->widgets.first->next != NULL) {
+		do {
+			window->widgets.first->next->handler(window->widgets.first->next,
+												 EVENT_DESTROY);
 			cedar_destroyWidget(window->widgets.first->next);
-		}
-
-		cedar_destroyWidget(window->widgets.first);
+		} while (window->widgets.first->next != NULL);
 	}
 
 	free(window);
