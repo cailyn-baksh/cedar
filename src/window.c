@@ -281,7 +281,21 @@ int cedar_display(Window *window) {
 		return HANDLER_EXIT;
 	}
 
-	window->widgets.selected = window->widgets.first;
+	{
+		// Set selected widget to first widget that can be selected
+		Widget *firstSelectable = window->widgets.first;
+		while (firstSelectable != NULL && !(firstSelectable->attrs & ATTR_FOCUSABLE)) {
+			firstSelectable = firstSelectable->next;
+		}
+
+		if (firstSelectable != NULL) {
+			window->widgets.selected = firstSelectable;
+		} else {
+			window->widgets.selected = window->widgets.first;
+		}
+
+		window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+	}
 
 	for (;;) {
 		/* Dispatch events */
@@ -400,7 +414,7 @@ MenuItem *getPrevSelectableMenuitem(Menu *menu) {
 	return item;
 }
 
-uint24_t defaultWindowEventHandler(Window *window, int event) {
+uint24_t defaultWindowEventHandler(Window *window, uint24_t event) {
 	static uint8_t blankScreenThisFrame = 0;
 	uint24_t handlerReturnCode;
 
@@ -443,6 +457,11 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 						if (firstItem != NULL) {
 							window->menu->selected = firstItem;
 						}
+
+						// Send blur event to selected widget
+						if (window->widgets.selected != NULL) {
+							window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
+						}
 					}
 				}
 
@@ -461,6 +480,11 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 						}
 					} else {
 						window->menu->selected = NULL;
+
+						// Send focus event to selected widget
+						if (window->widgets.selected != NULL) {
+							window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+						}
 					}
 				}
 
@@ -478,21 +502,31 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 					if (nextItem != NULL) {
 						window->menu->selected = nextItem;
 					}
-				} else if (window->widgets.selected->next) {
+				} else if (window->widgets.selected->next != NULL) {
 					// Select next widget
-					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
-																		  EVENT_BLUR);
-					switch (handlerReturnCode) {
-						case HANDLER_EXIT:
-							return HANDLER_EXIT;
+					Widget *nextSelectableWidget = window->widgets.selected->next;
+					while (!(nextSelectableWidget->attrs & ATTR_FOCUSABLE)){
+						nextSelectableWidget = nextSelectableWidget->next;
 					}
 
-					window->widgets.selected = window->widgets.selected->next;
-					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
-																		  EVENT_FOCUS);
-					switch (handlerReturnCode) {
-						case HANDLER_EXIT:
-							return HANDLER_EXIT;
+					if (nextSelectableWidget != NULL) {
+						// send blur event to previously selected widget
+						handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
+																			  EVENT_BLUR);
+						switch (handlerReturnCode) {
+							case HANDLER_EXIT:
+								return HANDLER_EXIT;
+						}
+
+						window->widgets.selected = nextSelectableWidget;
+
+						// send focus event
+						handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
+																			  EVENT_FOCUS);
+						switch (handlerReturnCode) {
+							case HANDLER_EXIT:
+								return HANDLER_EXIT;
+						}
 					}
 				}
 
@@ -510,21 +544,31 @@ uint24_t defaultWindowEventHandler(Window *window, int event) {
 					if (prevItem != NULL) {
 						window->menu->selected = prevItem;
 					}
-				} else if (window->widgets.selected->prev) {
+				} else if (window->widgets.selected->prev != NULL) {
 					// Select previous widget
-					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
-																		  EVENT_BLUR);
-					switch (handlerReturnCode) {
-						case HANDLER_EXIT:
-							return HANDLER_EXIT;
+					Widget *prevSelectableWidget = window->widgets.selected->prev;
+					while (prevSelectableWidget != NULL && !(prevSelectableWidget->attrs & ATTR_FOCUSABLE)){
+						prevSelectableWidget = prevSelectableWidget->prev;
 					}
 
-					window->widgets.selected = window->widgets.selected->prev;
-					handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
-																		  EVENT_FOCUS);
-					switch (handlerReturnCode) {
-						case HANDLER_EXIT:
-							return HANDLER_EXIT;
+					if (prevSelectableWidget != NULL) {
+						// send blur event to previously selected widget
+						handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
+																			  EVENT_BLUR);
+						switch (handlerReturnCode) {
+							case HANDLER_EXIT:
+								return HANDLER_EXIT;
+						}
+
+						window->widgets.selected = prevSelectableWidget;
+
+						// select focus event
+						handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
+																			  EVENT_FOCUS);
+						switch (handlerReturnCode) {
+							case HANDLER_EXIT:
+								return HANDLER_EXIT;
+						}
 					}
 				}
 

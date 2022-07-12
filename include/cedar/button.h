@@ -5,6 +5,7 @@
 
 typedef struct {
 	char *text;
+	bool focused;
 } ButtonData;
 
 /*
@@ -20,6 +21,6 @@ Widget *Button(int x, int y, int width, int height, const char *text);
 /*
  * The default event handler for label widgets.
  */
-uint24_t defaultButtonHandler(Widget *widget, int event);
+uint24_t defaultButtonHandler(Widget *widget, uint24_t event);
 
 #endif  // _LIBCEDAR_BUTTON_H_

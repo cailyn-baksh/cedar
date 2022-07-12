@@ -38,14 +38,14 @@ typedef struct MenuItem MenuItem;
 /*
  * Handle events for a widget.
  */
-typedef uint24_t WidgetEventHandler(Widget *widget, int event);
+typedef uint24_t WidgetEventHandler(Widget *widget, uint24_t event);
 
 /*
  * Handle events for a window.
  *
  * 
  */
-typedef uint24_t WindowEventHandler(Window *window, int event);
+typedef uint24_t WindowEventHandler(Window *window, uint24_t event);
 
 /*
  * A window
@@ -162,6 +162,8 @@ struct Widget {
 	WidgetType type;
 	uint24_t id;
 
+	uint24_t attrs;
+
 	Widget *prev;
 	Widget *next;
 
@@ -179,6 +181,8 @@ struct Widget {
 
 	WidgetEventHandler *handler;
 };
+
+#define ATTR_FOCUSABLE			0x1
 
 #define getData(type, widget) ((type *)widget->data)
 
@@ -259,7 +263,7 @@ void cedar_destroyWindow(Window *window);
 /*
  * The default window event handler
  */
-uint24_t defaultWindowEventHandler(Window *window, int event);
+uint24_t defaultWindowEventHandler(Window *window, uint24_t event);
 
 /*
  * Display a window.

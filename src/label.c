@@ -12,6 +12,8 @@ Widget *Label(int x, int y, int width, int height, const char *text) {
 
 	widget->type = WIDGET_LABEL;
 
+	widget->attrs = 0;
+
 	widget->next = NULL;
 	widget->prev = NULL;
 
@@ -31,7 +33,7 @@ Widget *Label(int x, int y, int width, int height, const char *text) {
 	return widget;
 }
 
-uint24_t defaultLabelHandler(Widget *widget, int event) {
+uint24_t defaultLabelHandler(Widget *widget, uint24_t event) {
 	switch (event) {
 		case EVENT_DESTROY:
 			// Clean up widget

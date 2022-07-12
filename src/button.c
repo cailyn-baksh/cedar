@@ -5,10 +5,14 @@
 #include "cedar/button.h"
 #include "cedar/utils.h"
 
+#include "cedardbg.h"
+
 Widget *Button(int x, int y, int width, int height, const char *text) {
 	Widget *widget = malloc(sizeof(Widget));
 
 	widget->type = WIDGET_BUTTON;
+
+	widget->attrs = ATTR_FOCUSABLE;
 
 	widget->next = NULL;
 	widget->prev = NULL;
@@ -24,12 +28,14 @@ Widget *Button(int x, int y, int width, int height, const char *text) {
 	data->text = malloc(strlen(text) * sizeof(char));
 	strcpy(data->text, text);
 
+	data->focused = false;
+
 	widget->handler = defaultButtonHandler;
 
 	return widget;
 }
 
-uint24_t defaultButtonHandler(Widget *widget, int event) {
+uint24_t defaultButtonHandler(Widget *widget, uint24_t event) {
 	switch (event) {
 		case EVENT_DESTROY:
 			// Clean up widget
@@ -37,9 +43,34 @@ uint24_t defaultButtonHandler(Widget *widget, int event) {
 			break;
 		case EVENT_PAINT:
 			// Paint widget
-			gfx_Rectangle(widget->realX, widget->realY, widget->width, widget->height);
-			wrapTextInBox(getData(ButtonData, widget)->text, widget->realX+2,
-				widget->realY+2, widget->width-2, widget->height-2);
+			if (getData(ButtonData, widget)->focused) {
+				// Draw focused
+				gfx_FillRectangle(widget->realX, widget->realY, widget->width, widget->height);
+
+				
+				gfx_SetTextFGColor(255);
+				gfx_SetTextBGColor(0);
+				gfx_SetTextTransparentColor(0);
+
+				wrapTextInBox(getData(ButtonData, widget)->text, widget->realX+2,
+					widget->realY+2, widget->width-2, widget->height-2);
+
+				gfx_SetTextFGColor(0);
+				gfx_SetTextBGColor(255);
+				gfx_SetTextTransparentColor(255);
+			} else {
+				// Draw unfocused
+				gfx_Rectangle(widget->realX, widget->realY, widget->width, widget->height);
+				wrapTextInBox(getData(ButtonData, widget)->text, widget->realX+2,
+					widget->realY+2, widget->width-2, widget->height-2);
+			}
+
+			break;
+		case EVENT_FOCUS:
+			getData(ButtonData, widget)->focused = true;
+			break;
+		case EVENT_BLUR:
+			getData(ButtonData, widget)->focused = false;
 			break;
 		case EVENT_KEYDOWN:
 			// Handle keypress
