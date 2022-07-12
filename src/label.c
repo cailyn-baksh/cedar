@@ -4,6 +4,8 @@
 #include "cedar.h"
 #include "cedar/label.h"
 
+#include "cedardbg.h"
+
 Widget *Label(int x, int y, int width, int height, const char *text) {
 	Widget *widget = malloc(sizeof(Widget));
 
@@ -14,42 +16,80 @@ Widget *Label(int x, int y, int width, int height, const char *text) {
 
 	widget->x = x;
 	widget->y = y;
-	widget->width = gfx_GetCharWidth('m') * width;
+	widget->width = width;
 	widget->height = height;
 
 	widget->data = malloc(sizeof(LabelData));
 	LabelData *data = widget->data;
 
-	size_t len = strlen(text);
-	data->nLines = (len + (width-1)) / width;  // ceiling division
-
-	// allocate enough room for all the lines
-	data->lines = malloc(data->nLines * sizeof(char *));
-
-	for (size_t index=0, line=0; line < data->nLines; ++line, index += width) {
-		data->lines[line] = malloc(width * sizeof(char) + 1);
-		strncpy(data->lines[line], &text[index], width);
-		data->lines[line][width] = '\0';
-	}
+	data->text = malloc(strlen(text) * sizeof(char));
+	strcpy(data->text, text);
 
 	widget->handler = defaultLabelHandler;
 
 	return widget;
 }
 
-void paintLabel(Widget *widget) {
-	for (size_t i=0, lineOffset=0; i < getData(LabelData, widget)->nLines; ++i, lineOffset += 10) {
-		gfx_PrintStringXY(getData(LabelData, widget)->lines[i], widget->realX, widget->realY + lineOffset);
-	}
+#define isWhitespace(c) (c == '\0'\
+					  || c == ' '\
+					  || c == '\t')
+
+void drawLabelText(Widget *label) {
+	const char *str = getData(LabelData, label)->text;
+	const char *startOfWord = str;
+
+	unsigned int xOffset = 0;
+	unsigned int yOffset = 0;
+	unsigned int wordLength = 0;
+
+	bool hasFoundWord = false;
+
+	do {
+		if (hasFoundWord && isWhitespace(*str)) {
+			// print entire word
+			while (startOfWord != str) {  // pointer comparison
+				if (!(xOffset == 0 && isWhitespace(*startOfWord))) {
+					// Print chars that are not leading whitespace
+
+					if (xOffset > label->width) {
+						// At end of label, break to next line
+						xOffset = 0;
+						yOffset += 10;
+					}
+
+					gfx_SetTextXY(label->realX + xOffset, label->realY + yOffset);
+					gfx_PrintChar(*startOfWord);
+					xOffset += gfx_GetCharWidth(*startOfWord);
+				}
+				++startOfWord;
+			}
+			// after loop startOfWord = str+1
+			wordLength = 0;
+			hasFoundWord = false;
+		} else {
+			// Increase length of word
+			hasFoundWord = true;
+			wordLength += gfx_GetCharWidth(*str);
+		}
+
+		if (xOffset + wordLength > label->width && wordLength < label->width) {
+			// The word is too long to fit on this line, but it will fit on the
+			// next line. Break to next line
+			// If the word will not fit on the next line then the print loop
+			// will break it at the end of the line
+			xOffset = 0;
+			yOffset += 10;
+		}
+	} while (*(str++));
 }
 
-int defaultLabelHandler(Widget *widget, int event) {
+uint24_t defaultLabelHandler(Widget *widget, int event) {
 	switch (event) {
 		case EVENT_PAINT:
 			// Paint widget
-			paintLabel(widget);
+			drawLabelText(widget);
 			break;
 	}
 
-	return 0;
+	return HANDLER_NORMAL;
 }

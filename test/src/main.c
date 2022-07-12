@@ -38,7 +38,8 @@ int main() {
 	cedar_addMenuItem(&menu, "Other", MENUBUTTON_OTHER);
 
 	// Add widgets
-	cedar_addWidget(&window, Label(10, 10, 10, 30, "Hello World!"));
+	cedar_addWidget(&window, Label(10, 10, 70, 40, "Hello World!"));
+	cedar_addWidget(&window, Label(110, 40, 70, 40, "abcdefghijklmnopqrstuvwxyz"));
 
 	cedar_display(&window);
 

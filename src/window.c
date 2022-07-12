@@ -130,6 +130,18 @@ MenuItem *getLastSelectedMenuItem(Menu *menu) {
 	}
 }
 
+uint24_t deselectSubmenuTree(Menu *root) {
+	uint24_t submenusClosed = 1;
+
+	if (root->selected != NULL && root->selected->type == MENUITEM_PARENT && root->selected->child->active) {
+		root->selected->child->selected = NULL;
+		submenusClosed += deselectSubmenuTree(root->selected->child);
+	}
+	root->active = false;
+
+	return submenusClosed;
+}
+
 int dispatchEvents(Window *window) {
 	uint24_t handlerReturnCode;
 
@@ -353,18 +365,6 @@ MenuItem *getPrevSelectableMenuitem(Menu *menu) {
 	}
 
 	return item;
-}
-
-uint24_t deselectSubmenuTree(Menu *root) {
-	uint24_t submenusClosed = 1;
-
-	if (root->selected != NULL && root->selected->type == MENUITEM_PARENT && root->selected->child->active) {
-		root->selected->child->selected = NULL;
-		submenusClosed += deselectSubmenuTree(root->selected->child);
-	}
-	root->active = false;
-
-	return submenusClosed;
 }
 
 uint24_t defaultWindowEventHandler(Window *window, int event) {
