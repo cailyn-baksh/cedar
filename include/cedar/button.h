@@ -21,6 +21,6 @@ Widget *Button(int x, int y, int width, int height, const char *text);
 /*
  * The default event handler for label widgets.
  */
-uint24_t defaultButtonHandler(Widget *widget, uint24_t event);
+CALLBACKRESULT defaultButtonHandler(Widget *widget, EVENT event, ID id, uint24_t param);
 
 #endif  // _LIBCEDAR_BUTTON_H_

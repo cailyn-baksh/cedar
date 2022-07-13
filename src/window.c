@@ -19,7 +19,7 @@ bool key_2nd = false;
 bool key_alpha = false;
 bool alphaLock = false;
 
-void cedar_initWindow(Window *window, WindowEventHandler *handler) {
+void cedar_initWindow(Window *window, EventHandler *handler) {
 	window->widgets.first = NULL;
 	window->widgets.last = NULL;
 	window->widgets.selected = NULL;
@@ -44,8 +44,7 @@ void cedar_destroyWindow(Window *window) {
 		if (current->prev != NULL) {
 			cedar_destroyWidget(current->prev);
 		}
-		window->widgets.first->next->handler(current,
-											 EVENT_DESTROY);
+		window->widgets.first->next->handler(window->widgets.first->next, EVENT_DESTROY, NULL, 0);
 	}
 
 	free(window);
@@ -183,11 +182,11 @@ int dispatchEvents(Window *window) {
 		}
 	} else {
 		if (keyup) {
-			handlerReturnCode = window->handler(window, EVENT_KEYUP);
+			handlerReturnCode = window->handler(window, EVENT_KEYUP, NULL, 0);
 			switch (handlerReturnCode) {
-				case HANDLER_EXIT:
-					return HANDLER_EXIT;
-				case HANDLER_DO_NOT_PROPAGATE:
+				case CALLBACK_EXIT:
+					return CALLBACK_EXIT;
+				case CALLBACK_DO_NOT_PROPAGATE:
 					goto dontPropagateKeyup;
 			}
 
@@ -200,10 +199,10 @@ int dispatchEvents(Window *window) {
 
 					switch (selected->type) {
 						case MENUITEM_BUTTON:
-							handlerReturnCode = window->handler(window, EVENT_MENUSELECT);
+							handlerReturnCode = window->handler(window, EVENT_MENUSELECT, window->menu->selected->id, 0);
 							switch (handlerReturnCode) {
-								case HANDLER_EXIT:
-									return HANDLER_EXIT;
+								case CALLBACK_EXIT:
+									return CALLBACK_EXIT;
 							}
 							break;
 						case MENUITEM_PARENT:
@@ -216,12 +215,11 @@ int dispatchEvents(Window *window) {
 				}
 			} else {
 				// Menu is not selected
-				handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
-																	  EVENT_KEYUP);
+				handlerReturnCode = window->widgets.selected->handler(window->widgets.selected, EVENT_KEYUP, NULL, 0);
 				switch (handlerReturnCode) {
-					case HANDLER_EXIT:
-						return HANDLER_EXIT;
-					case HANDLER_DO_NOT_PROPAGATE:
+					case CALLBACK_EXIT:
+						return CALLBACK_EXIT;
+					case CALLBACK_DO_NOT_PROPAGATE:
 						goto dontPropagateKeyup;
 				}
 			}
@@ -232,11 +230,11 @@ int dispatchEvents(Window *window) {
 		}
 
 		if (keydown) {
-			handlerReturnCode = window->handler(window, EVENT_KEYDOWN);
+			handlerReturnCode = window->handler(window, EVENT_KEYDOWN, NULL, 0);
 			switch (handlerReturnCode) {
-				case HANDLER_EXIT:
-					return HANDLER_EXIT;
-				case HANDLER_DO_NOT_PROPAGATE:
+				case CALLBACK_EXIT:
+					return CALLBACK_EXIT;
+				case CALLBACK_DO_NOT_PROPAGATE:
 					goto dontPropagateKeydown;
 			}
 
@@ -251,12 +249,11 @@ int dispatchEvents(Window *window) {
 				}
 			} else {
 				// Menu is not selected
-				handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
-																	  EVENT_KEYDOWN);
+				handlerReturnCode = window->widgets.selected->handler(window->widgets.selected, EVENT_KEYDOWN, NULL, 0);
 				switch (handlerReturnCode) {
-					case HANDLER_EXIT:
-						return HANDLER_EXIT;
-					case HANDLER_DO_NOT_PROPAGATE:
+					case CALLBACK_EXIT:
+						return CALLBACK_EXIT;
+					case CALLBACK_DO_NOT_PROPAGATE:
 						goto dontPropagateKeydown;
 				}
 			}
@@ -276,9 +273,9 @@ int dispatchEvents(Window *window) {
 int cedar_display(Window *window) {
 	uint24_t handlerReturnCode;
 
-	handlerReturnCode = window->handler(window, EVENT_CREATE);
-	if (handlerReturnCode == HANDLER_EXIT) {
-		return HANDLER_EXIT;
+	handlerReturnCode = window->handler(window, EVENT_CREATE, NULL, 0);
+	if (handlerReturnCode == CALLBACK_EXIT) {
+		return CALLBACK_EXIT;
 	}
 
 	{
@@ -294,22 +291,22 @@ int cedar_display(Window *window) {
 			window->widgets.selected = window->widgets.first;
 		}
 
-		window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+		window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS, NULL, 0);
 	}
 
 	for (;;) {
 		/* Dispatch events */
 		handlerReturnCode = dispatchEvents(window);
-		if (handlerReturnCode != HANDLER_NORMAL) {
+		if (handlerReturnCode != CALLBACK_DEFAULT) {
 			return handlerReturnCode;
 		}
 
 		/* Paint */
-		handlerReturnCode = window->handler(window, EVENT_PAINT);
+		handlerReturnCode = window->handler(window, EVENT_PAINT, NULL, 0);
 		switch (handlerReturnCode) {
-			case HANDLER_EXIT:
-				return HANDLER_EXIT;
-			case HANDLER_DO_NOT_PROPAGATE:
+			case CALLBACK_EXIT:
+				return CALLBACK_EXIT;
+			case CALLBACK_DO_NOT_PROPAGATE:
 				goto dontPropagatePaint;
 		}
 
@@ -330,11 +327,11 @@ int cedar_display(Window *window) {
 				widget->realY = window->realTop + (widget->y - window->projTop);
 
 				// Draw it
-				handlerReturnCode = widget->handler(widget, EVENT_PAINT);
+				handlerReturnCode = widget->handler(widget, EVENT_PAINT, NULL, 0);
 				switch (handlerReturnCode) {
-					case HANDLER_EXIT:
-						return HANDLER_EXIT;
-					case HANDLER_DO_NOT_PROPAGATE:
+					case CALLBACK_EXIT:
+						return CALLBACK_EXIT;
+					case CALLBACK_DO_NOT_PROPAGATE:
 						goto dontPropagatePaint;
 				}
 			}
@@ -414,7 +411,7 @@ MenuItem *getPrevSelectableMenuitem(Menu *menu) {
 	return item;
 }
 
-uint24_t defaultWindowEventHandler(Window *window, uint24_t event) {
+uint24_t defaultWindowEventHandler(Window *self, EVENT event, ID id, uint24_t param) {
 	static uint8_t blankScreenThisFrame = 0;
 	uint24_t handlerReturnCode;
 
@@ -428,154 +425,150 @@ uint24_t defaultWindowEventHandler(Window *window, uint24_t event) {
 		case EVENT_KEYDOWN:
 			if (key_2nd && wasKeyPressed(1, kb_Mode)) {
 				// Quit
-				return HANDLER_EXIT;
+				return CALLBACK_EXIT;
 			} else if (wasKeyPressed(7, kb_Up)) {
 				// Up arrow key pressed
-				if (window->menu) {
-					if (window->menu->selected->type == MENUITEM_PARENT
-					 && window->menu->selected->child->active) {
+				if (self->menu) {
+					if (self->menu->selected->type == MENUITEM_PARENT
+					 && self->menu->selected->child->active) {
 						// A submenu is active
-						Menu *submenu = getLastSelectedMenuItem(window->menu)->parent;
+						Menu *submenu = getLastSelectedMenuItem(self->menu)->parent;
 						MenuItem *prevItem = getPrevSelectableMenuitem(submenu);
 
 						if (prevItem != NULL) {
 							// Select previous submenu item
 							submenu->selected = prevItem;
 						} else {
-							window->menu->selected->child->active = false;
-							deselectSubmenuTree(window->menu);
+							self->menu->selected->child->active = false;
+							deselectSubmenuTree(self->menu);
 							blankScreenThisFrame = 2;  // Clear buffer and next buffer
 						}
 					} else {
 						// Select the first menu item that is not a separator
-						MenuItem *firstItem = window->menu->first;
+						MenuItem *firstItem = self->menu->first;
 
 						while (firstItem != NULL && firstItem->type == MENUITEM_SEPARATOR) {
 							firstItem = firstItem->next;
 						}
 
 						if (firstItem != NULL) {
-							window->menu->selected = firstItem;
+							self->menu->selected = firstItem;
 						}
 
 						// Send blur event to selected widget
-						if (window->widgets.selected != NULL) {
-							window->widgets.selected->handler(window->widgets.selected, EVENT_BLUR);
+						if (self->widgets.selected != NULL) {
+							self->widgets.selected->handler(self->widgets.selected, EVENT_BLUR, NULL, 0);
 						}
 					}
 				}
 
-				return HANDLER_DO_NOT_PROPAGATE;
+				return CALLBACK_DO_NOT_PROPAGATE;
 			} else if (wasKeyPressed(7, kb_Down)) {
 				// Down arrow key pressed
-				if (window->menu) {
-					if (window->menu->selected->type == MENUITEM_PARENT
-					 && window->menu->selected->child->active) {
+				if (self->menu) {
+					if (self->menu->selected->type == MENUITEM_PARENT
+					 && self->menu->selected->child->active) {
 						// A submenu is active
-						Menu *submenu = getLastSelectedMenuItem(window->menu)->parent;
+						Menu *submenu = getLastSelectedMenuItem(self->menu)->parent;
 						MenuItem *nextItem = getNextSelectableMenuitem(submenu);
 
 						if (nextItem != NULL) {
 							submenu->selected = nextItem;
 						}
 					} else {
-						window->menu->selected = NULL;
+						self->menu->selected = NULL;
 
 						// Send focus event to selected widget
-						if (window->widgets.selected != NULL) {
-							window->widgets.selected->handler(window->widgets.selected, EVENT_FOCUS);
+						if (self->widgets.selected != NULL) {
+							self->widgets.selected->handler(self->widgets.selected, EVENT_FOCUS, NULL, 0);
 						}
 					}
 				}
 
-				return HANDLER_DO_NOT_PROPAGATE;
+				return CALLBACK_DO_NOT_PROPAGATE;
 			} else if (wasKeyPressed(7, kb_Right)) {
 				// Right arrow key pressed
-				if (window->menu && window->menu->selected) {
+				if (self->menu && self->menu->selected) {
 					// Select next menu item that is not a separator
-					if (deselectSubmenuTree(window->menu) > 1) {
+					if (deselectSubmenuTree(self->menu) > 1) {
 						blankScreenThisFrame = 2;
 					}
 
-					MenuItem *nextItem = getNextSelectableMenuitem(window->menu);
+					MenuItem *nextItem = getNextSelectableMenuitem(self->menu);
 
 					if (nextItem != NULL) {
-						window->menu->selected = nextItem;
+						self->menu->selected = nextItem;
 					}
-				} else if (window->widgets.selected->next != NULL) {
+				} else if (self->widgets.selected->next != NULL) {
 					// Select next widget
-					Widget *nextSelectableWidget = window->widgets.selected->next;
+					Widget *nextSelectableWidget = self->widgets.selected->next;
 					while (!(nextSelectableWidget->attrs & ATTR_FOCUSABLE)){
 						nextSelectableWidget = nextSelectableWidget->next;
 					}
 
 					if (nextSelectableWidget != NULL) {
 						// send blur event to previously selected widget
-						handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
-																			  EVENT_BLUR);
+						handlerReturnCode = self->widgets.selected->handler(self->widgets.selected, EVENT_BLUR, NULL, 0);
 						switch (handlerReturnCode) {
-							case HANDLER_EXIT:
-								return HANDLER_EXIT;
+							case CALLBACK_EXIT:
+								return CALLBACK_EXIT;
 						}
 
-						window->widgets.selected = nextSelectableWidget;
+						self->widgets.selected = nextSelectableWidget;
 
 						// send focus event
-						handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
-																			  EVENT_FOCUS);
+						handlerReturnCode = self->widgets.selected->handler(self->widgets.selected, EVENT_FOCUS, NULL, 0);
 						switch (handlerReturnCode) {
-							case HANDLER_EXIT:
-								return HANDLER_EXIT;
+							case CALLBACK_EXIT:
+								return CALLBACK_EXIT;
 						}
 					}
 				}
 
-				return HANDLER_DO_NOT_PROPAGATE;
+				return CALLBACK_DO_NOT_PROPAGATE;
 			} else if (wasKeyPressed(7, kb_Left)) {
 				// Left arrow key pressed
-				if (window->menu && window->menu->selected) {
+				if (self->menu && self->menu->selected) {
 					// Select previous menu item that is not a separator
-					if (deselectSubmenuTree(window->menu) > 1) {
+					if (deselectSubmenuTree(self->menu) > 1) {
 						blankScreenThisFrame = 2;
 					}
 
-					MenuItem *prevItem = getPrevSelectableMenuitem(window->menu);
+					MenuItem *prevItem = getPrevSelectableMenuitem(self->menu);
 
 					if (prevItem != NULL) {
-						window->menu->selected = prevItem;
+						self->menu->selected = prevItem;
 					}
-				} else if (window->widgets.selected->prev != NULL) {
+				} else if (self->widgets.selected->prev != NULL) {
 					// Select previous widget
-					Widget *prevSelectableWidget = window->widgets.selected->prev;
+					Widget *prevSelectableWidget = self->widgets.selected->prev;
 					while (prevSelectableWidget != NULL && !(prevSelectableWidget->attrs & ATTR_FOCUSABLE)){
 						prevSelectableWidget = prevSelectableWidget->prev;
 					}
 
 					if (prevSelectableWidget != NULL) {
 						// send blur event to previously selected widget
-						handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
-																			  EVENT_BLUR);
+						handlerReturnCode = self->widgets.selected->handler(self->widgets.selected, EVENT_BLUR, NULL, 0);
 						switch (handlerReturnCode) {
-							case HANDLER_EXIT:
-								return HANDLER_EXIT;
+							case CALLBACK_EXIT:
+								return CALLBACK_EXIT;
 						}
 
-						window->widgets.selected = prevSelectableWidget;
+						self->widgets.selected = prevSelectableWidget;
 
 						// select focus event
-						handlerReturnCode = window->widgets.selected->handler(window->widgets.selected,
-																			  EVENT_FOCUS);
+						handlerReturnCode = self->widgets.selected->handler(self->widgets.selected, EVENT_FOCUS, NULL, 0);
 						switch (handlerReturnCode) {
-							case HANDLER_EXIT:
-								return HANDLER_EXIT;
+							case CALLBACK_EXIT:
+								return CALLBACK_EXIT;
 						}
 					}
 				}
 
-				return HANDLER_DO_NOT_PROPAGATE;
+				return CALLBACK_DO_NOT_PROPAGATE;
 			}
 			break;
 	}
 
-	return HANDLER_NORMAL;
+	return CALLBACK_DEFAULT;
 }

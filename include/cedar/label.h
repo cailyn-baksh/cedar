@@ -28,6 +28,6 @@ Widget *Label(int x, int y, int width, int height, const char *text);
 /*
  * The default event handler for label widgets.
  */
-uint24_t defaultLabelHandler(Widget *widget, uint24_t event);
+CALLBACKRESULT defaultLabelHandler(Widget *widget, EVENT event, ID id, uint24_t param);
 
 #endif  // _LIBCEDAR_LABEL_H_

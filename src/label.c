@@ -10,8 +10,6 @@
 Widget *Label(int x, int y, int width, int height, const char *text) {
 	Widget *widget = malloc(sizeof(Widget));
 
-	widget->type = WIDGET_LABEL;
-
 	widget->attrs = 0;
 
 	widget->next = NULL;
@@ -33,7 +31,7 @@ Widget *Label(int x, int y, int width, int height, const char *text) {
 	return widget;
 }
 
-uint24_t defaultLabelHandler(Widget *widget, uint24_t event) {
+CALLBACKRESULT defaultLabelHandler(Widget *widget, EVENT event, ID id, uint24_t param) {
 	switch (event) {
 		case EVENT_DESTROY:
 			// Clean up widget
@@ -46,5 +44,5 @@ uint24_t defaultLabelHandler(Widget *widget, uint24_t event) {
 			break;
 	}
 
-	return HANDLER_NORMAL;
+	return CALLBACK_DEFAULT;
 }

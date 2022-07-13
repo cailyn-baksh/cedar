@@ -30,7 +30,7 @@ void cedar_addMenuSeparator(Menu *menu) {
 	if (menu->first == NULL) menu->first = item;
 }
 
-void cedar_addMenuItem(Menu *parent, const char *label, unsigned int buttonID) {
+void cedar_addMenuItem(Menu *parent, const char *label, ID id) {
 	MenuItem *item = malloc(sizeof(MenuItem));
 
 	item->type = MENUITEM_BUTTON;
@@ -38,7 +38,7 @@ void cedar_addMenuItem(Menu *parent, const char *label, unsigned int buttonID) {
 
 	strncpy(item->label, label, 11);
 	item->label[11] = '\0';
-	item->buttonID = buttonID;
+	item->id = id;
 
 	item->parent = parent;
 

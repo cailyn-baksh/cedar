@@ -35,17 +35,70 @@ typedef struct Menu Menu;
 struct MenuItem;
 typedef struct MenuItem MenuItem;
 
-/*
- * Handle events for a widget.
- */
-typedef uint24_t WidgetEventHandler(Widget *widget, uint24_t event);
+/* The result of a callback function */
+typedef uint24_t CALLBACKRESULT;
+
+/* An event code */
+typedef uint24_t EVENT;
+
+/* An ID */
+typedef uint24_t ID;
 
 /*
- * Handle events for a window.
+ * A function to handle an event
  *
- * 
+ * self		A pointer to the object handling the event
+ * event	The event to be handled
+ * id		The ID of the thing that triggered the event. This can be NULL
+ * param	A versatile parameter
  */
-typedef uint24_t WindowEventHandler(Window *window, uint24_t event);
+typedef CALLBACKRESULT EventHandler(void *self, EVENT event, ID id, uint24_t param);
+
+/*
+ * Event codes. These are used to indicate to event handlers which event was
+ * fired. More event codes can be defined outside the library; these are just
+ * the core events. The event code range 0x00000-0x007FF is reserved.
+ *
+ * EVENT_CREATE			Fired when a component is created
+ * EVENT_DESTROY		Fired when a component is destroyed
+ * EVENT_PAINT			Fired when painting
+ * EVENT_FOCUS			Fired when a component recieves focus by the user
+ * EVENT_BLUR			Fired when a component loses focus from the user
+ * EVENT_KEYDOWN		Fired when a key is pressed
+ * EVENT_KEYUP			Fired when a key is released
+ * EVENT_MENUSELECT		Fired when a menu button is pressed
+ * EVENT_HOTKEY			Fired when a hotkey is pressed
+ * EVENT_TICK			Fired when a timer ticks
+ * EVENT_VSCROLL		Fired when a component's container scrolls vertically
+ * EVENT_HSCROLL		Fired when a component's container scrolls horizontally
+ */
+#define EVENT_CREATE				((EVENT)0x000001)
+#define EVENT_DESTROY				((EVENT)0x000002)
+#define EVENT_PAINT					((EVENT)0x000003)
+#define EVENT_FOCUS					((EVENT)0x000004)
+#define EVENT_BLUR					((EVENT)0x000005)
+#define EVENT_KEYDOWN				((EVENT)0x000006)
+#define EVENT_KEYUP					((EVENT)0x000007)
+#define EVENT_MENUSELECT			((EVENT)0x000008)
+#define EVENT_HOTKEY				((EVENT)0x000009)
+#define EVENT_TICK					((EVENT)0x00000A)
+#define EVENT_VSCROLL				((EVENT)0x00000B)
+#define EVENT_HSCROLL				((EVENT)0x00000C)
+
+
+/*
+ * Callback return codes
+ *
+ * CALLBACK_DEFAULT				Returned by handlers normally.
+ * CALLBACK_EXIT				Returned by handlers when the mainloop should exit
+ * CALLBACK_DO_NOT_PROPAGATE	Returned by handlers when the event that triggered
+ *								them shouldn't be passed to subsequent event
+ *								handlers.
+ */
+#define CALLBACK_DEFAULT				((CALLBACKRESULT)0x000000)
+#define CALLBACK_EXIT					((CALLBACKRESULT)0x000001)
+#define CALLBACK_DO_NOT_PROPAGATE		((CALLBACKRESULT)0x000002)
+
 
 /*
  * A window
@@ -92,59 +145,12 @@ struct Window {
 	unsigned int width;
 	unsigned int height;
 
-	WindowEventHandler *handler;
-};
-
-
-// event code range 0x0000-0x007F reserved for base events
-
-/*
- * EVENT_PAINT		Fired when painting
- * EVENT_FOCUS		Fired when a component is selected by the user
- * EVENT_BLUR		Fired when a component loses focus from the user
- * EVENT_KEYDOWN	Fired when a button is pressed
- * EVENT_KEYUP		Fired when a button is released
- * EVENT_SCROLL		Fired when a component's container scrolls
- */
-#define EVENT_CREATE				0x000001
-#define EVENT_DESTROY				0x000002
-#define EVENT_PAINT					0x000003
-#define EVENT_FOCUS					0x000004
-#define EVENT_BLUR					0x000005
-#define EVENT_KEYDOWN				0x000006
-#define EVENT_KEYUP					0x000007
-#define EVENT_MENUSELECT			0x000008
-#define EVENT_HOTKEY				0x000009
-#define EVENT_TICK					0x00000A
-#define EVENT_VSCROLL				0x00000B
-#define EVENT_HSCROLL				0x00000C
-
-
-/*
- * Handler return codes
- *
- * HANDLER_NORMAL			Returned by handlers normally
- * HANDLER_EXIT				Returned by handlers when the mainloop should exit
- * HANDLER_DO_NOT_PROPAGATE	Returned by handlers when the event that triggered
- *							them shouldn't be passed to subsequent event
- *							handlers.
- */
-#define HANDLER_NORMAL				0x000000
-#define HANDLER_EXIT				0x000001
-#define HANDLER_DO_NOT_PROPAGATE	0x000002
-
-enum WidgetType {
-	WIDGET_LABEL,
-	WIDGET_BUTTON,
-	WIDGET_CANVAS,
-	WIDGET_CHECKBOX,
-	WIDGET_RADIO
+	EventHandler *handler;
 };
 
 /*
  * A widget.
  *
- * type			The type of widget
  * prev			Pointer to the previous widget in this window. May be NULL.
  * next			Pointer to the next widget in this window. May be NULL.
  *
@@ -159,8 +165,7 @@ enum WidgetType {
  * handler		Pointer to the event handler function
  */
 struct Widget {
-	WidgetType type;
-	uint24_t id;
+	ID id;
 
 	uint24_t attrs;
 
@@ -179,7 +184,7 @@ struct Widget {
 
 	void *data;
 
-	WidgetEventHandler *handler;
+	EventHandler *handler;
 };
 
 #define ATTR_FOCUSABLE			0x1
@@ -227,16 +232,15 @@ struct MenuItem {
 		MENUITEM_SEPARATOR
 	} type;
 
+	ID id;
+
 	MenuItem *next;
 	MenuItem *prev;
 
 	char label[12];
 
 	Menu *parent;
-	union {
-		unsigned int buttonID;
-		Menu *child;
-	};
+	Menu *child;
 
 	bool invertColours;
 };
@@ -251,7 +255,7 @@ void cedar_cleanup();
  * window		The window to initialize.
  * handler		A handler for the window's events
  */
-void cedar_initWindow(Window *window, WindowEventHandler *handler);
+void cedar_initWindow(Window *window, EventHandler *handler);
 
 /*
  * Clean up after a window
@@ -263,7 +267,7 @@ void cedar_destroyWindow(Window *window);
 /*
  * The default window event handler
  */
-uint24_t defaultWindowEventHandler(Window *window, uint24_t event);
+CALLBACKRESULT defaultWindowEventHandler(Window *self, EVENT event, ID id, uint24_t param);
 
 /*
  * Display a window.
@@ -315,9 +319,9 @@ void cedar_addMenuSeparator(Menu *menu);
  *
  * menu			The menu to add the item to
  * label		The label of the menu. This must be less than 12 characters.
- * buttonID		The id of the button
+ * id			The id of the menu button
  */
-void cedar_addMenuItem(Menu *menu, const char *label, unsigned int buttonID);
+void cedar_addMenuItem(Menu *menu, const char *label, ID id);
 
 /*
  * Add a submenu to the menu.

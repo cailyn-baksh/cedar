@@ -10,8 +10,6 @@
 Widget *Button(int x, int y, int width, int height, const char *text) {
 	Widget *widget = malloc(sizeof(Widget));
 
-	widget->type = WIDGET_BUTTON;
-
 	widget->attrs = ATTR_FOCUSABLE;
 
 	widget->next = NULL;
@@ -35,7 +33,7 @@ Widget *Button(int x, int y, int width, int height, const char *text) {
 	return widget;
 }
 
-uint24_t defaultButtonHandler(Widget *widget, uint24_t event) {
+CALLBACKRESULT defaultButtonHandler(Widget *widget, EVENT event, ID id, uint24_t param) {
 	switch (event) {
 		case EVENT_DESTROY:
 			// Clean up widget
