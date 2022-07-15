@@ -568,6 +568,7 @@ void cedar_display(CedarWindow *window) {
 					if (!window->repaint) {
 						// only blit if we're not going to blit everything later
 						gfx_BlitRectangle(gfx_buffer, realPos.x, realPos.y, widget->bounds.width, widget->bounds.height);
+						widget->repaint = false;  // repaint finished
 					}
 
 					switch (callbackReturnCode) {
@@ -628,6 +629,7 @@ void cedar_display(CedarWindow *window) {
 
 		if (window->repaint) {
 			gfx_BlitBuffer();
+			window->repaint = false;
 		}
 	}
 }

@@ -17,6 +17,8 @@ typedef struct {
  * width	The width of the button
  * height	The height of the button
  */
-CedarWidget *CedarButton(int x, int y, int width, int height, const char *text);
+CedarWidget *_CedarButton(int x, int y, int width, int height, const char *text);
+
+CedarWidget *CedarButton(ID id, int x, int y, int width, int height, const char *text);
 
 #endif  // _LIBCEDAR_BUTTON_H_

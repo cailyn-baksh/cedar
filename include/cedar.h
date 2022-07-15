@@ -233,9 +233,6 @@ CALLBACKRESULT _cedar_dispatchEvent(CedarEventHandler *firstHandler, void *self,
  */
 #define cedar_dispatchEvent(event, component, param) _cedar_dispatchEvent(component->handlers, component, event, param)
 
-// TODO: make this static (since we register events now we dont need to expose default handlers)
-CALLBACKRESULT cedar_defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24_t param);
-
 /*
  * Adds a widget to a window
  *
@@ -297,17 +294,6 @@ void cedar_AddSubmenu(CedarMenu *parent, ID id, const char *label, CedarMenu *ch
  * Returns a pointer to the currently selected menu item.
  */
 CedarMenuItem *cedar_GetLastSelectedMenuItem(CedarMenu *menu);
-
-#ifndef _NOEXTERN
-extern uint16_t cedar_prevKbState[8];
-
-extern bool cedar_2nd;
-extern bool cedar_alpha;
-extern bool cedar_alphaLock;
-#endif  // _NOEXTERN
-
-#define wasKeyPressed(group, key)	(!(prevKbState[group] & key) && (kb_Data[group] & key))
-#define wasKeyReleased(group, key)	((prevKbState[group] & key) && !(kb_Data[group] & key))
 
 #ifdef __cplusplus
 }
