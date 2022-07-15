@@ -1,5 +1,3 @@
-// FIXME: not all callback return codes are properly handled
-
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -71,25 +69,9 @@ void deselectAllSubmenus(CedarMenu *menu) {
 }
 
 static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24_t param) {
-	uint24_t handlerReturnCode;
+	uint24_t callbackReturnCode;
 
 	switch (event) {
-		case EVENT_PAINT:
-			// TODO: change drawing so that we dont need to do this
-			// consider blanking draw buffer before each paint
-			// blitting vs buffer swapping:
-			//   - blitting would require two large memory operations (blank
-			//     screen and blit draw buffer)
-			//   - buffer swapping would require one large memory operation
-			//     (just blanking the screen)
-			// is it possible to avoid blanking the screen?
-			//   with blitting it could be possible (is it worth it?)
-			// probable best solution:
-			//   - use blitting, and only blank and reblit regions as necessary
-			//   - give each component a repaint flag that event handlers can
-			//     use to force a repaint
-			//   - provide a global repaint flag that forces all to redraw
-			break;
 		case EVENT_KEYDOWN:
 			switch (param) {
 				case CEDAR_KB_QUIT:
@@ -128,7 +110,12 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 
 								if (self->widgets.selected != NULL) {
 									// dispatch blur event to previously selected widget
-									cedar_dispatchEvent(EVENT_BLUR, self->widgets.selected, 0);
+									callbackReturnCode = cedar_dispatchEvent(EVENT_BLUR, self->widgets.selected, 0);
+
+									switch (callbackReturnCode) {
+										case CALLBACK_EXIT:
+											return CALLBACK_EXIT;
+									}
 								}
 							}
 						}
@@ -157,7 +144,12 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 							// Send focus event to selected widget
 							if (self->widgets.selected != NULL) {
 								// self->widget.selected should never be NULL
-								cedar_dispatchEvent(EVENT_FOCUS, self->widgets.selected, 0);
+								callbackReturnCode = cedar_dispatchEvent(EVENT_FOCUS, self->widgets.selected, 0);
+
+								switch (callbackReturnCode) {
+									case CALLBACK_EXIT:
+										return CALLBACK_EXIT;
+								}
 							}
 						}
 					}
@@ -184,9 +176,19 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 						}
 
 						if (nextWidget != NULL) {
-							cedar_dispatchEvent(EVENT_BLUR, self->widgets.selected, 0);
+							callbackReturnCode = cedar_dispatchEvent(EVENT_BLUR, self->widgets.selected, 0);
+							switch (callbackReturnCode) {
+								case CALLBACK_EXIT:
+									return CALLBACK_EXIT;
+							}
+
 							self->widgets.selected = nextWidget;
-							cedar_dispatchEvent(EVENT_FOCUS, self->widgets.selected, 0);
+
+							callbackReturnCode = cedar_dispatchEvent(EVENT_FOCUS, self->widgets.selected, 0);
+							switch (callbackReturnCode) {
+								case CALLBACK_EXIT:
+									return CALLBACK_EXIT;
+							}
 						}
 					}
 
@@ -211,9 +213,19 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 						}
 
 						if (prevWidget != NULL) {
-							cedar_dispatchEvent(EVENT_BLUR, self->widgets.selected, 0);
+							callbackReturnCode = cedar_dispatchEvent(EVENT_BLUR, self->widgets.selected, 0);
+							switch (callbackReturnCode) {
+								case CALLBACK_EXIT:
+									return CALLBACK_EXIT;
+							}
+
 							self->widgets.selected = prevWidget;
-							cedar_dispatchEvent(EVENT_FOCUS, self->widgets.selected, 0);
+
+							callbackReturnCode = cedar_dispatchEvent(EVENT_FOCUS, self->widgets.selected, 0);
+							switch (callbackReturnCode) {
+								case CALLBACK_EXIT:
+									return CALLBACK_EXIT;
+							}
 						}
 					}
 
@@ -228,12 +240,20 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 
 						if (isMenuItemButton(selected)) {
 							// button menu item
-							cedar_dispatchEvent(EVENT_MENUSELECT, self, selected->id);
+							callbackReturnCode = cedar_dispatchEvent(EVENT_MENUSELECT, self, selected->id);
+							switch (callbackReturnCode) {
+								case CALLBACK_EXIT:
+									return CALLBACK_EXIT;
+							}
 						} else if (isMenuItemSubmenu(selected)) {
 							// submenu
 							selected->parent->submenuActive = true;
 							selected->child->selected = selected->child->first;
-							selected->child->selected = getNextSelectableMenuitem(selected->child);  // FIXME: does not check for NULL
+
+							CedarMenuItem *nextSelectable = getNextSelectableMenuitem(selected->child);
+							if (nextSelectable != NULL) {
+								selected->child->selected = nextSelectable;
+							}
 						}
 
 						// event was for the menu so don't propagate to widgets
@@ -243,7 +263,7 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 			break;
 	}
 
-	return CALLBACK_DEFAULT;
+	return CALLBACK_NORMAL;
 }
 
 void cedar_InitWindow(CedarWindow *window) {
@@ -272,6 +292,7 @@ void cedar_destroyWindow(CedarWindow *window) {
 	// Clean up widgets
 	for (CedarWidget *current=window->widgets.first; current != NULL; current = current->next) {
 		if (current->prev != NULL) {
+			// everything always gets destroyed
 			cedar_dispatchEvent(EVENT_DESTROY, current->prev, 0);
 			cedar_destroyWidget(current->prev);
 		}
@@ -363,10 +384,10 @@ CedarMenuItem *getLastSelectedMenuItem(CedarMenu *menu) {
 }
 
 CALLBACKRESULT _cedar_dispatchEvent(CedarEventHandler *firstHandler, void *self, EVENT event, uint24_t param) {
-	CALLBACKRESULT result = CALLBACK_DEFAULT;
+	CALLBACKRESULT result = CALLBACK_NORMAL;
 	CedarEventHandler *handler = firstHandler;
 
-	while (result == CALLBACK_DEFAULT && handler != NULL) {
+	while (result == CALLBACK_NORMAL && handler != NULL) {
 		result = handler->callback(self, event, param);
 		handler = handler->next;
 	}
@@ -374,12 +395,14 @@ CALLBACKRESULT _cedar_dispatchEvent(CedarEventHandler *firstHandler, void *self,
 	return result;
 }
 
-int cedar_display(CedarWindow *window) {
-	uint24_t handlerReturnCode;
+void cedar_display(CedarWindow *window) {
+	uint24_t callbackReturnCode;
 
-	handlerReturnCode = cedar_dispatchEvent(EVENT_CREATE, window, 0);
-	if (handlerReturnCode == CALLBACK_EXIT) {
-		return 0;  // TODO: decide how to return (should it return void?)
+	callbackReturnCode = cedar_dispatchEvent(EVENT_CREATE, window, 0);
+
+	switch (callbackReturnCode) {
+		case CALLBACK_EXIT:
+			return;
 	}
 
 	{
@@ -395,7 +418,11 @@ int cedar_display(CedarWindow *window) {
 			window->widgets.selected = window->widgets.first;
 		}
 
-		cedar_dispatchEvent(EVENT_FOCUS, window->widgets.selected, 0);
+		callbackReturnCode = cedar_dispatchEvent(EVENT_FOCUS, window->widgets.selected, 0);
+		switch (callbackReturnCode) {
+			case CALLBACK_EXIT:
+				return;
+		}
 	}
 
 	uint16_t prevKbState[8] = { 0 };
@@ -447,13 +474,23 @@ int cedar_display(CedarWindow *window) {
 						if (isAlpha) keycode |= CEDAR_ALPHAFLAG;
 
 						// dispatch keyup to window
-						handlerReturnCode =
+						callbackReturnCode =
 							cedar_dispatchEvent(EVENT_KEYUP, window, keycode);
+						switch (callbackReturnCode) {
+							case CALLBACK_EXIT:
+								return;
+							case CALLBACK_DO_NOT_PROPAGATE:
+								goto dontPropagateKeyup;
+						}
 
 						// dispatch keyup to widget
-						if (handlerReturnCode == CALLBACK_DEFAULT) {
-							cedar_dispatchEvent(EVENT_KEYUP, window->widgets.selected, keycode);
+						callbackReturnCode = cedar_dispatchEvent(EVENT_KEYUP, window->widgets.selected, keycode);
+						switch (callbackReturnCode) {
+							case CALLBACK_EXIT:
+								return;
 						}
+
+						dontPropagateKeyup:
 					}
 				}
 			} else if ((prevKbState[i] & kb_Data[i]) != kb_Data[i]) {
@@ -473,25 +510,42 @@ int cedar_display(CedarWindow *window) {
 						if (isAlpha) keycode |= CEDAR_ALPHAFLAG;
 
 						// dispatch keydown to window
-						handlerReturnCode =
+						callbackReturnCode =
 							cedar_dispatchEvent(EVENT_KEYDOWN, window, keycode);
-
-						// dispatch keydown to widget
-						if (handlerReturnCode == CALLBACK_DEFAULT) {
-							cedar_dispatchEvent(EVENT_KEYDOWN, window->widgets.selected, keycode);
+						switch (callbackReturnCode) {
+							case CALLBACK_EXIT:
+								return;
+							case CALLBACK_DO_NOT_PROPAGATE:
+								goto dontPropagateKeydown;
+							case CALLBACK_NORMAL:
 						}
+
+						callbackReturnCode = cedar_dispatchEvent(EVENT_KEYDOWN, window->widgets.selected, keycode);
+						switch (callbackReturnCode) {
+							case CALLBACK_EXIT:
+								return;
+						}
+
+						dontPropagateKeydown:
 					}
 				}
 			}
 		}
 
-		handlerReturnCode = dispatchEvents(window);
-		if (handlerReturnCode != CALLBACK_DEFAULT) {
-			return handlerReturnCode;
+		callbackReturnCode = dispatchEvents(window);
+		switch (callbackReturnCode) {
+			case CALLBACK_EXIT:
+				return;
 		}
 
 		/* Paint */
-		cedar_dispatchEvent(EVENT_PAINT, window, 0);
+		callbackReturnCode = cedar_dispatchEvent(EVENT_PAINT, window, 0);
+		switch (callbackReturnCode) {
+			case CALLBACK_EXIT:
+				return;
+			case CALLBACK_DO_NOT_PROPAGATE:
+				goto dontPropagatePaint;
+		}
 
 		for (CedarWidget *widget=window->widgets.first; widget != NULL; widget = widget->next) {
 			if (widget->repaint || window->repaint) {
@@ -508,11 +562,19 @@ int cedar_display(CedarWindow *window) {
 					// Widget is fully visible
 					clearRect(realPos.x, realPos.y, widget->bounds.width, widget->bounds.height);
 
-					cedar_dispatchEvent(EVENT_PAINT, widget, &realPos);
+					callbackReturnCode = cedar_dispatchEvent(EVENT_PAINT, widget, &realPos);
+					// return code is checked after blitting
 
 					if (!window->repaint) {
 						// only blit if we're not going to blit everything later
 						gfx_BlitRectangle(gfx_buffer, realPos.x, realPos.y, widget->bounds.width, widget->bounds.height);
+					}
+
+					switch (callbackReturnCode) {
+						case CALLBACK_EXIT:
+							return;
+						case CALLBACK_DO_NOT_PROPAGATE:
+							goto dontPropagatePaint;
 					}
 				}
 			}

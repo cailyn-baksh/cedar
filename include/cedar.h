@@ -223,7 +223,7 @@ void cedar_RegisterWindowEventHandler(CedarWindow *window, CedarEventHandler *ha
  * window		The window to display
  * Returns the code the window mainloop exited on.
  */
-int cedar_Display(CedarWindow *window);
+void cedar_Display(CedarWindow *window);
 
 CALLBACKRESULT _cedar_dispatchEvent(CedarEventHandler *firstHandler, void *self, EVENT event, uint24_t param);
 
