@@ -3,6 +3,7 @@
 
 #include <cedar.h>
 
+// TODO: either prefix with Cedar or dont expose to user
 typedef struct {
 	char *text;
 	bool focused;
@@ -16,11 +17,6 @@ typedef struct {
  * width	The width of the button
  * height	The height of the button
  */
-Widget *Button(int x, int y, int width, int height, const char *text);
-
-/*
- * The default event handler for label widgets.
- */
-CALLBACKRESULT defaultButtonHandler(Widget *widget, EVENT event, ID id, uint24_t param);
+CedarWidget *CedarButton(int x, int y, int width, int height, const char *text);
 
 #endif  // _LIBCEDAR_BUTTON_H_

@@ -12,6 +12,6 @@
  * width	The width of the box
  * height	The height of the box
  */
-void wrapTextInBox(const char *str, int x, int y, unsigned int width, unsigned int height);
+void cedar_wrapTextInBox(const char *str, int x, int y, unsigned int width, unsigned int height);
 
 #endif  // _CEDAR_UTILS_H_

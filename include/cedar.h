@@ -4,6 +4,10 @@
 #ifndef _LIBCEDAR_H_
 #define _LIBCEDAR_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define _LIBCEDAR_Q(s) #s
 #define _LIBCEDAR_QUOTE(s) _LIBCEDAR_Q(s)
 
@@ -20,172 +24,114 @@
 #include <graphx.h>
 #include <keypadc.h>
 
-struct Window;
-typedef struct Window Window;
-
-enum WidgetType;
-typedef enum WidgetType WidgetType;
-
-struct Widget;
-typedef struct Widget Widget;
-
-struct Menu;
-typedef struct Menu Menu;
-
-struct MenuItem;
-typedef struct MenuItem MenuItem;
-
-/* The result of a callback function */
-typedef uint24_t CALLBACKRESULT;
-
-/* An event code */
-typedef uint24_t EVENT;
-
-/* An ID */
-typedef uint24_t ID;
+#include "cedar/defs.h"
 
 /*
- * A function to handle an event
+ * A point
  *
- * self		A pointer to the object handling the event
- * event	The event to be handled
- * id		The ID of the thing that triggered the event. This can be NULL
- * param	A versatile parameter
+ * x	The x coordinate of the point
+ * y	The y coordinate of the point
  */
-typedef CALLBACKRESULT EventHandler(void *self, EVENT event, ID id, uint24_t param);
+struct CedarPoint {
+	uint24_t x;
+	uint24_t y;
+};
 
 /*
- * Event codes. These are used to indicate to event handlers which event was
- * fired. More event codes can be defined outside the library; these are just
- * the core events. The event code range 0x00000-0x007FF is reserved.
+ * A rectangle
  *
- * EVENT_CREATE			Fired when a component is created
- * EVENT_DESTROY		Fired when a component is destroyed
- * EVENT_PAINT			Fired when painting
- * EVENT_FOCUS			Fired when a component recieves focus by the user
- * EVENT_BLUR			Fired when a component loses focus from the user
- * EVENT_KEYDOWN		Fired when a key is pressed
- * EVENT_KEYUP			Fired when a key is released
- * EVENT_MENUSELECT		Fired when a menu button is pressed
- * EVENT_HOTKEY			Fired when a hotkey is pressed
- * EVENT_TICK			Fired when a timer ticks
- * EVENT_VSCROLL		Fired when a component's container scrolls vertically
- * EVENT_HSCROLL		Fired when a component's container scrolls horizontally
+ * x		The x coordinate of the left side of the rectangle
+ * y		The y coordinate of the top side of the rectangle
+ * width	The width of the rectangle
+ * height	The height of the rectangle
  */
-#define EVENT_CREATE				((EVENT)0x000001)
-#define EVENT_DESTROY				((EVENT)0x000002)
-#define EVENT_PAINT					((EVENT)0x000003)
-#define EVENT_FOCUS					((EVENT)0x000004)
-#define EVENT_BLUR					((EVENT)0x000005)
-#define EVENT_KEYDOWN				((EVENT)0x000006)
-#define EVENT_KEYUP					((EVENT)0x000007)
-#define EVENT_MENUSELECT			((EVENT)0x000008)
-#define EVENT_HOTKEY				((EVENT)0x000009)
-#define EVENT_TICK					((EVENT)0x00000A)
-#define EVENT_VSCROLL				((EVENT)0x00000B)
-#define EVENT_HSCROLL				((EVENT)0x00000C)
+struct CedarRect {
+	uint24_t x;
+	uint24_t y;
+	uint24_t width;
+	uint24_t height;
+};
 
+#define cedar_rectIsAInsideB(a, b)\
+	(a.x >= b.x\
+	&& (a.x + a.width) <= (b.x + b.width)\
+	&& (a.y >= b.y)\
+	&& (a.y + a.height) <= (b.y + b.height))
 
 /*
- * Callback return codes
+ * A singly linked list of event handlers
  *
- * CALLBACK_DEFAULT				Returned by handlers normally.
- * CALLBACK_EXIT				Returned by handlers when the mainloop should exit
- * CALLBACK_DO_NOT_PROPAGATE	Returned by handlers when the event that triggered
- *								them shouldn't be passed to subsequent event
- *								handlers.
+ * callback		A pointer to this handler's callback function
+ * next			A pointer to the next handler
  */
-#define CALLBACK_DEFAULT				((CALLBACKRESULT)0x000000)
-#define CALLBACK_EXIT					((CALLBACKRESULT)0x000001)
-#define CALLBACK_DO_NOT_PROPAGATE		((CALLBACKRESULT)0x000002)
-
+struct CedarEventHandler {
+	CedarEventHandlerCallback *callback;
+	CedarEventHandler *next;
+};
 
 /*
- * A window
+ * A window.
  *
- * widgets.first		Pointer to the first widget in this window. If NULL
- *						there are no widgets in this window.
- * widgets.last			Pointer to the last widget in this window. If NULL
- *						there are no widgets in this window.
- * widgets.selected		Pointer to the currently selected widget.
- *
- * menu					The menu
- *
- * realTop				The screen coordinate of the top of the main drawable
- *						area (where widgets are drawn).
- * realLeft				The screen coordinate of the left of the main drawable
- *						area (where widgets are drawn).
- *
- * projTop				The virtual Y coordinate at the top of the screen.
- * projLeft				The virtual X coordinate at the left of the screen.
- * 
- * width				The width of the window.
- * height				The height of the window
- *
- * baseX			The base X coordinate of the main drawing area.
- * baseY			The base Y coordinate of the main drawing area.
- *
- * handler				An event handler to handle window events.
+ * widgets.first		A pointer to the first widget in the window
+ * widgets.last			A pointer to the last widget in the window
+ * widgets.selected		A pointer to the currently selected widget
+ * menu					A pointer to the Menu struct for this window's menu bar.
+ *						If NULL, then this window does not have a menu bar.
+ * drawableArea			A rectangle within the drawing buffer representing the
+ *						main drawable area (i.e. where widgets are drawn).
+ * scrolledTo			Where the window has been scrolled to. This point
+ *						corresponds to the top left corner of the window.
+ * handlers				The event handlers registered to this window.
  */
-struct Window {
+struct CedarWindow {
 	struct {
-		Widget *first;
-		Widget *last;
-		Widget *selected;
+		CedarWidget *first;
+		CedarWidget *last;
+		CedarWidget *selected;
 	} widgets;
 
-	Menu *menu;
+	CedarMenu *menu;
 
-	int realTop;
-	int realLeft;
+	CedarRect bounds;
+	CedarPoint origin;
 
-	int projTop;
-	int projLeft;
+	bool repaint;
 
-	unsigned int width;
-	unsigned int height;
-
-	EventHandler *handler;
+	CedarEventHandler *handlers;
 };
 
 /*
  * A widget.
  *
- * prev			Pointer to the previous widget in this window. May be NULL.
- * next			Pointer to the next widget in this window. May be NULL.
- *
- * x			The X coordinate of the widget in pixels
- * y			The Y coordinate of the widget in pixels
- * width		The width of the widget in pixels
- * height		The height of the widget in pixels
- * realX		The X coordinate in the drawing buffer
- * realY		The Y coordinate in the drawing buffer
- * data			Pointer to widget-specific data.
- *
- * handler		Pointer to the event handler function
+ * id			The ID of this widget.
+ * attrs		Widget attributes. These generally are constant
+ * prev			A pointer to the previous widget
+ * next			A pointer to the next widget
+ * bounds		The bounds of this widget
+ * repaint		Force repaint
+ * enabled		Whether or not this widget is enabled.
+ * handlers		The event handlers for this widget
+ * data			Data for this widget, specific to each widget subclass.
  */
-struct Widget {
+struct CedarWidget {
 	ID id;
 
-	uint24_t attrs;
+	uint24_t attrs;  // IDEA: make attrs quasi-constant by creating 3 bytes of
+					 // padding that can only be accessed through assembly
 
-	Widget *prev;
-	Widget *next;
+	CedarWidget *prev;
+	CedarWidget *next;
 
-	int x;
-	int y;
-	unsigned int width;
-	unsigned int height;
+	CedarRect bounds;
 
-	int realX;
-	int realY;
-
+	bool repaint;
 	bool enabled;
 
-	void *data;
+	CedarEventHandler *handlers;
 
-	EventHandler *handler;
+	uint8_t data[];
 };
+// TODO: consider merging widgets and windows
 
 #define ATTR_FOCUSABLE			0x1
 
@@ -197,152 +143,174 @@ struct Widget {
 #define MENU_DROPDOWN_HEIGHT (GFX_LCD_HEIGHT - MENUBAR_HEIGHT - 5)
 
 /*
- * A menu
+ * A menu.
  *
- * first			The first MenuItem in the menu
- * last				The last MenuItem in the menu
- * selected			A pointer to the currently selected MenuItem in the menu
- * submenuActive	Whether the selected submenu is active. N/A if selected
- *					item is not MENUITEM_PARENT.
+ * first			A pointer to the first menu item
+ * last				A pointer to the last menu item
+ * selected			A pointer to the currently selected menu item
+ * submenuActive	Whether or not a submenu of this menu is active
  */
-struct Menu {
-	MenuItem *first;
-	MenuItem *last;
-	MenuItem *selected;
-	bool active;
+struct CedarMenu {
+	CedarMenuItem *first;
+	CedarMenuItem *last;
+	CedarMenuItem *selected;
+	bool submenuActive;
 };
 
 /*
- * An item in a menu
+ * A menu item.
  *
- * type		The type of menu.
- * next		The next item in the menu
- * prev		The previous item in the menu
- *
- * label	A string label for the menu item
- *
- * submenu	A submenu to display when this menu is selected. Only used when
- *			type == MENUITEM_PARENT
- * handler	A handler to invoke when the menu is selected.
+ * id		The ID of this menu item.
+ * next		A pointer to the next menu item
+ * prev		A pointer to the previous menu item
+ * label	A label for this menu item. If label[0] == '\0', then this menu item
+ *			is a separator. This label must be null terminated.
+ * parent	A pointer to the menu which contains this menu item
+ * child	A pointer to the submenu this menu item represents. If NULL then
+ *			this menu item is treated as a button and triggers EVENT_MENUSELECT
+ *			when clicked.
  */
-struct MenuItem {
-	enum {
-		MENUITEM_PARENT,
-		MENUITEM_BUTTON,
-		MENUITEM_SEPARATOR
-	} type;
-
+struct CedarMenuItem {
 	ID id;
 
-	MenuItem *next;
-	MenuItem *prev;
+	CedarMenuItem *next;
+	CedarMenuItem *prev;
 
 	char label[12];
 
-	Menu *parent;
-	Menu *child;
-
-	bool invertColours;
+	CedarMenu *parent;
+	CedarMenu *child;
 };
 
+#define isMenuItemSeparator(item) (item->label[0] == '\0')
+#define isMenuItemButton(item) (!isMenuItemSeparator(item) && item->child == NULL)
+#define isMenuItemSubmenu(item) (item->child != NULL)
+
+/*
+ * Initializes the library. This must be called before any other cedar functions
+ */
 void cedar_init();
 
+/*
+ * Cleans up after the library. This should be called after you are done using
+ * the library.
+ */
 void cedar_cleanup();
 
 /*
- * Initialize a window
+ * Initializes a window
  *
- * window		The window to initialize.
- * handler		A handler for the window's events
+ * window		A pointer to the window to initialize.
  */
-void cedar_initWindow(Window *window, EventHandler *handler);
-
+void cedar_InitWindow(CedarWindow *window);
 /*
- * Clean up after a window
+ * Destroys a window and cleans up its memory.
  *
- * window		The window to clean up.
+ * window		The window to destroy.
  */
-void cedar_destroyWindow(Window *window);
-
+void cedar_DestroyWindow(CedarWindow *window);
 /*
- * The default window event handler
- */
-CALLBACKRESULT defaultWindowEventHandler(Window *self, EVENT event, ID id, uint24_t param);
-
-/*
- * Display a window.
+ * Registers an event handler for a window. Window event handlers are executed
+ * in a LIFO order.
  *
- * window		The window to display.
+ * window		The window to register the handler to
+ * handler		The handler to register
  */
-int cedar_display(Window *window);
+void cedar_RegisterWindowEventHandler(CedarWindow *window, CedarEventHandler *handler);
+/*
+ * Displays a window
+ *
+ * window		The window to display
+ * Returns the code the window mainloop exited on.
+ */
+int cedar_Display(CedarWindow *window);
+
+CALLBACKRESULT _cedar_dispatchEvent(CedarEventHandler *firstHandler, void *self, EVENT event, uint24_t param);
 
 /*
- * Add a widget to a window. Widgets can only be added to one window.
+ * Dispatch an event to a component. Component can be a pointer to any type as
+ * long as it has a handlers member.
+ */
+#define cedar_dispatchEvent(event, component, param) _cedar_dispatchEvent(component->handlers, component, event, param)
+
+// TODO: make this static (since we register events now we dont need to expose default handlers)
+CALLBACKRESULT cedar_defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24_t param);
+
+/*
+ * Adds a widget to a window
  *
  * window		The window to add the widget to
  * widget		The widget to add to the window
  */
-void cedar_addWidget(Window *window, Widget *widget);
+void cedar_AddWidget(CedarWindow *window, CedarWidget *widget);
 
 /*
- * Free a widget's memory. The previous and next widgets will be linked to each
- * other.
+ * Destroys a widget and cleans up its memory
  *
- * widget		The widget to clean up.
+ * widget		The widget to clean up
  */
-void cedar_destroyWidget(Widget *widget);
+// should this be exposed? could it be a part of cedar_DestroyWindow?
+void cedar_DestroyWidget(CedarWidget *widget);
 
 /*
- * Set the menu for a window
+ * Sets the menu for the window's menubar
  *
- * window		The window to add the menu to
- * menu			The menu to add to the window
+ * window		The window to set the menubar of
+ * menu			The menu to make into the menubar
  */
-void cedar_setMenu(Window *window, Menu *menu);
+void cedar_SetMenu(CedarWindow *window, CedarMenu *menu);
 
 /*
- * Initialize a menu
+ * Initializes a menu. This should be called before calling any other functions
+ * on a menu.
  *
- * menu			The menu to initialize
+ * menu		The menu to initialize
  */
-void cedar_initMenu(Menu *menu);
-
+void cedar_InitMenu(CedarMenu *menu);
 /*
- * Add a separator to a menu
- *
- * menu			The menu to add the separator to
+ * Adds a separator to the menu
+ * 
+ * menu		The menu to add the separator to
  */
-void cedar_addMenuSeparator(Menu *menu);
-
+void cedar_AddMenuSeparator(CedarMenu *menu);
 /*
- * Add an item to the menu. See also: cedar_addSubmenu
+ * Adds a button menu item to the menu
  *
- * menu			The menu to add the item to
- * label		The label of the menu. This must be less than 12 characters.
- * id			The id of the menu button
+ * menu		The menu to add the item to
+ * id		The id of the menu item
+ * label	The label of the menu item
  */
-void cedar_addMenuItem(Menu *menu, const char *label, ID id);
-
+void cedar_AddMenuItem(CedarMenu *menu, ID id, const char *label);
 /*
- * Add a submenu to the menu.
+ * Adds a submenu to the menu
  *
- * parent		The parent menu to add this child menu to.
- * label		The label of the submenu. This must be less than 12 characters.
- * submenu		The child menu to add to the parent menu.
+ * parent	A pointer to the parent menu to add the child menu to
+ * id		The ID of the menu item
+ * label	The label for the submenu
+ * child	A pointer to the child menu to add to the parent menu
  */
-void cedar_addSubmenu(Menu *parent, const char *label, Menu *child);
-
-MenuItem *getLastSelectedMenuItem(Menu *menu);
+void cedar_AddSubmenu(CedarMenu *parent, ID id, const char *label, CedarMenu *child);
+/*
+ * Traverses submenus to get the menu item the user is currently selecting
+ *
+ * menu		The menu to find the currently selected menu item in
+ * Returns a pointer to the currently selected menu item.
+ */
+CedarMenuItem *cedar_GetLastSelectedMenuItem(CedarMenu *menu);
 
 #ifndef _NOEXTERN
-extern uint16_t prevKbState[8];
+extern uint16_t cedar_prevKbState[8];
 
-extern bool key_2nd;
-extern bool key_alpha;
-extern bool alphaLock;
+extern bool cedar_2nd;
+extern bool cedar_alpha;
+extern bool cedar_alphaLock;
 #endif  // _NOEXTERN
 
 #define wasKeyPressed(group, key)	(!(prevKbState[group] & key) && (kb_Data[group] & key))
 #define wasKeyReleased(group, key)	((prevKbState[group] & key) && !(kb_Data[group] & key))
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _LIBCEDAR_H_

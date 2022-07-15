@@ -78,5 +78,5 @@ CALLBACKRESULT defaultButtonHandler(Widget *widget, EVENT event, ID id, uint24_t
 			break;
 	}
 
-	return HANDLER_NORMAL;
+	return CALLBACK_DEFAULT;
 }

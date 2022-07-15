@@ -23,11 +23,6 @@ typedef struct {
  * text		The content of the label
  * Returns a new Label widget
  */
-Widget *Label(int x, int y, int width, int height, const char *text);
-
-/*
- * The default event handler for label widgets.
- */
-CALLBACKRESULT defaultLabelHandler(Widget *widget, EVENT event, ID id, uint24_t param);
+CedarWidget *CedarLabel(int x, int y, int width, int height, const char *text);
 
 #endif  // _LIBCEDAR_LABEL_H_

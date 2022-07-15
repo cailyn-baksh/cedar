@@ -11,6 +11,6 @@
  * width	The width of the canvas
  * height	The height of the canvas
  */
-Widget *Canvas(int x, int y, int width, int height);
+CedarWidget *Canvas(int x, int y, int width, int height);
 
 #endif  // _LIBCEDAR_CANVAS_H_
