@@ -10,7 +10,6 @@
 #include "cedar.h"
 #undef _NOEXTERN
 
-#include <assert.h>
 #include "cedardbg.h"
 
 uint16_t cedar_prevKbState[8] = { 0 };
@@ -237,10 +236,9 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 				case CEDAR_KB_ENTER:
 					if (self->menu != NULL && self->menu->selected != NULL) {
 						// menu is selected
-						CedarMenuItem *selected =  cedar_GetLastSelectedMenuItem(self->menu);
+						CedarMenuItem *selected = cedar_GetLastSelectedMenuItem(self->menu);
 
-						// FIXME: selected != self->parent->selected
-						if (selected != NULL) DBGPRINT("%d\n", selected == selected->parent->selected);
+						if (selected == NULL) break;
 
 						if (isMenuItemButton(selected)) {
 							// button menu item
@@ -253,11 +251,12 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 							// submenu
 							selected->parent->submenuActive = true;
 							selected->child->selected = selected->child->first;
-							DBGPRINT("submenu %x (%d, %d)\n", selected->id, selected->parent->submenuActive, selected->parent == self->menu);
 
-							CedarMenuItem *nextSelectable = getNextSelectableMenuItem(selected->child);
-							if (nextSelectable != NULL) {
-								selected->child->selected = nextSelectable;
+							if (selected->child->selected != NULL && isMenuItemSeparator(selected->child->selected)) {
+								CedarMenuItem *nextSelectable = getNextSelectableMenuItem(selected->child);
+								if (nextSelectable != NULL) {
+									selected->child->selected = nextSelectable;
+								}
 							}
 
 							self->repaint = true;

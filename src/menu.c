@@ -1,13 +1,18 @@
 #include <string.h>
 
 #include "cedar.h"
+#include "cedardbg.h"
 
 void cedar_SetMenu(CedarWindow *window, CedarMenu *menu) {
+	DBGPRINT("Setting menu of window at %p to menu at %p\n", window, menu);
+
 	window->menu = menu;
 	window->bounds.y = MENUBAR_HEIGHT;
 }
 
 void cedar_InitMenu(CedarMenu *menu) {
+	DBGPRINT("Initializing menu at %p\n", menu);
+
 	menu->first = NULL;
 	menu->last = NULL;
 	menu->selected = NULL;
@@ -15,6 +20,8 @@ void cedar_InitMenu(CedarMenu *menu) {
 }
 
 void cedar_AddMenuSeparator(CedarMenu *menu) {
+	DBGPRINT("Adding separator to menu at %p\n", menu);
+
 	CedarMenuItem *item = malloc(sizeof(CedarMenuItem));
 
 	item->id = ID_ANONYMOUS;
@@ -33,6 +40,8 @@ void cedar_AddMenuSeparator(CedarMenu *menu) {
 }
 
 void cedar_AddMenuItem(CedarMenu *parent, ID id, const char *label) {
+	DBGPRINT("Adding item '%s' with id %x to menu at %p\n", label, id, parent);
+
 	CedarMenuItem *item = malloc(sizeof(CedarMenuItem));
 
 	item->id = id;
@@ -52,6 +61,8 @@ void cedar_AddMenuItem(CedarMenu *parent, ID id, const char *label) {
 }
 
 void cedar_AddSubmenu(CedarMenu *parent, ID id, const char *label, CedarMenu *child) {
+	DBGPRINT("Adding submenu '%s' at %p with id %x to menu at %p\n", label, child, id, parent);
+
 	CedarMenuItem *item = malloc(sizeof(CedarMenuItem));
 
 	item->id = id;

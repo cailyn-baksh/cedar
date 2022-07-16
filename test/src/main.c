@@ -2,6 +2,9 @@
 #include <cedar/button.h>
 #include <cedar/label.h>
 
+#undef NDEBUG
+#include <debug.h>
+
 #define MENU_PROGRAM		0x0001
 #define MENUITEM_ABOUT		0x0002
 #define MENUITEM_EXIT		0x0003

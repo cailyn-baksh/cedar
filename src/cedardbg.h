@@ -13,4 +13,6 @@
 #define NDEBUG
 #endif  // DEBUG
 
+#include <assert.h>
+
 #endif  // _CEDARDBG_H_

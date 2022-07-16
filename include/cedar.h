@@ -227,8 +227,8 @@ void _cedar_RegisterWidgetEventHandler(CedarWidget *widget, CedarEventHandlerCal
  * handler		The handler to register
  */
 #define cedar_RegisterEventHandler(component, callback) _Generic((component),\
-	CedarWindow *: _cedar_RegisterWindowEventHandler((component)->handlers, callback),\
-	CedarWidget *: _cedar_RegisterWidgetEventHandler((component)->handlers, callback))
+	CedarWindow *: _cedar_RegisterWindowEventHandler(component, callback),\
+	CedarWidget *: _cedar_RegisterWidgetEventHandler(component, callback))
 
 CALLBACKRESULT _cedar_dispatchEvent(CedarEventHandler *firstHandler, void *self, EVENT event, uint24_t param);
 
