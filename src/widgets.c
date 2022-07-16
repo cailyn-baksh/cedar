@@ -2,11 +2,7 @@
 
 #include "cedar.h"
 
-void cedar_initWidget(CedarWidget *widget) {
-
-}
-
-void cedar_destroyWidget(CedarWidget *widget) {
+void cedar_DestroyWidget(CedarWidget *widget) {
 	if (widget->prev != NULL) {
 		widget->prev->next = widget->next;
 	}

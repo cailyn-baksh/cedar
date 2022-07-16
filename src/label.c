@@ -7,42 +7,47 @@
 
 #include "cedardbg.h"
 
-Widget *Label(int x, int y, int width, int height, const char *text) {
-	Widget *widget = malloc(sizeof(Widget));
+CALLBACKRESULT defaultLabelHandler(CedarWidget *self, EVENT event, uint24_t param) {
+	switch (event) {
+		case EVENT_DESTROY:
+			// clean up label-specific data;
+			free(((LabelData *)self->data)->text);
+			break;
+		case EVENT_PAINT:
+			// Paint widget
+		{
+			CedarPoint *pos = (CedarPoint *)param;
+			cedar_wrapTextInBox(((LabelData *)self->data)->text, pos->x, pos->y, self->bounds.width, self->bounds.height);
+		}
+	}
 
+	return CALLBACK_NORMAL;
+}
+
+CedarWidget *CedarLabel(ID id, int x, int y, int width, int height, const char *text) {
+	CedarWidget *widget = malloc(sizeof(CedarWidget) + sizeof(LabelData));
+
+	widget->id = id;
 	widget->attrs = 0;
 
 	widget->next = NULL;
 	widget->prev = NULL;
 
-	widget->x = x;
-	widget->y = y;
-	widget->width = width;
-	widget->height = height;
+	widget->bounds.x = x;
+	widget->bounds.y = y;
+	widget->bounds.width = width;
+	widget->bounds.height = height;
 
-	widget->data = malloc(sizeof(LabelData));
-	LabelData *data = widget->data;
+	widget->repaint = true;
+
+	widget->handlers = malloc(sizeof(CedarEventHandler));
+	widget->handlers->callback = defaultLabelHandler;
+	widget->handlers->next = NULL;
+
+	LabelData *data = (LabelData *)widget->data;
 
 	data->text = malloc(strlen(text) * sizeof(char));
 	strcpy(data->text, text);
 
-	widget->handler = defaultLabelHandler;
-
 	return widget;
-}
-
-CALLBACKRESULT defaultLabelHandler(Widget *widget, EVENT event, ID id, uint24_t param) {
-	switch (event) {
-		case EVENT_DESTROY:
-			// Clean up widget
-			free(getData(LabelData, widget)->text);
-			break;
-		case EVENT_PAINT:
-			// Paint widget
-			wrapTextInBox(getData(LabelData, widget)->text, widget->realX,
-				widget->realY, widget->width, widget->height);
-			break;
-	}
-
-	return CALLBACK_DEFAULT;
 }

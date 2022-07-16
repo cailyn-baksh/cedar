@@ -2,8 +2,8 @@
 	assume	adl = 1
 	section	.text,"ax",@progbits
 
-	public _cedar_init
-_cedar_init:
+	public _cedar_Init
+_cedar_Init:
 	push hl
 
 	call _gfx_Begin
@@ -19,8 +19,8 @@ _cedar_init:
 	pop hl
 	ret
 
-	public _cedar_cleanup
-_cedar_cleanup:
+	public _cedar_Cleanup
+_cedar_Cleanup:
 	call _gfx_End
 	ret
 

@@ -32,7 +32,7 @@ MKDIR = mkdir -p $1
 COPY = cp $1 $2
 endif
 
-CFLAGS = -S -Wall -Wextra -Wno-switch -Oz -mllvm -profile-guided-section-prefix=false $(addprefix -I ,$(INCLUDES)) -DDEBUG
+CFLAGS = -S -Wall -Wextra -Wno-incompatible-function-pointer-types -Oz -mllvm -profile-guided-section-prefix=false $(addprefix -I ,$(INCLUDES)) -DDEBUG
 
 # TODO: look at https://github.com/jacobly0/fasmg-ez80/blob/main/tiformat.inc
 # TODO: see if possible to compile appvar or compile into a single asm source

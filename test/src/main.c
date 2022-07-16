@@ -2,52 +2,58 @@
 #include <cedar/button.h>
 #include <cedar/label.h>
 
-#define MENUBUTTON_ABOUT	0x1
-#define MENUBUTTON_EXIT		0x2
-#define MENUBUTTON_OTHER	0x3
+#define MENU_PROGRAM		0x0001
+#define MENUITEM_ABOUT		0x0002
+#define MENUITEM_EXIT		0x0003
 
-uint24_t mainWindowEventHandler(Window *window, int event) {
-	if (event == EVENT_MENUSELECT) {
-		MenuItem *selected = getLastSelectedMenuItem(window->menu);
+#define LABEL_HELLO			0x0101
+#define LABEL_ALPHABET		0x0102
+#define BUTTON_BUTTON		0x0103
 
-		switch (selected->buttonID) {
-			case MENUBUTTON_EXIT:
-				return HANDLER_EXIT;
-		}
+CALLBACKRESULT mainWindowEventHandler(CedarWindow *self, EVENT event, uint24_t param) {
+	switch (event) {
+		case EVENT_PAINT:
+			self->repaint = true;
+			break;
+		case EVENT_MENUSELECT:
+			if (param == MENUITEM_EXIT) {
+				return CALLBACK_EXIT;
+			}
+			break;
 	}
 
-	return defaultWindowEventHandler(window, event);
+	return CALLBACK_NORMAL;
 }
 
 int main() {
-	cedar_init();
+	cedar_Init();
 
-	Window window;
-	cedar_initWindow(&window, mainWindowEventHandler);
+	CedarWindow window;
+	cedar_InitWindow(&window);
 
 	// Add menu
-	Menu menu;
-	cedar_initMenu(&menu);
-	cedar_setMenu(&window, &menu);
-		Menu prgmMenu;
-		cedar_initMenu(&prgmMenu);
-		cedar_addSubmenu(&menu, "Program", &prgmMenu);
-			cedar_addMenuItem(&prgmMenu, "About", MENUBUTTON_ABOUT);
-			cedar_addMenuSeparator(&prgmMenu);
-			cedar_addMenuItem(&prgmMenu, "Exit", MENUBUTTON_EXIT);
-	cedar_addMenuSeparator(&menu);
-	cedar_addMenuItem(&menu, "Other", MENUBUTTON_OTHER);
+	CedarMenu menu;
+	cedar_InitMenu(&menu);
+	cedar_SetMenu(&window, &menu);
+		CedarMenu prgmMenu;
+		cedar_InitMenu(&prgmMenu);
+		cedar_AddSubmenu(&menu, MENU_PROGRAM, "Program", &prgmMenu);
+			cedar_AddMenuItem(&prgmMenu, MENUITEM_ABOUT, "About");
+			cedar_AddMenuSeparator(&prgmMenu);
+			cedar_AddMenuItem(&prgmMenu, MENUITEM_EXIT, "Exit");
 
 	// Add widgets
-	cedar_addWidget(&window, Label(10, 10, 70, 40, "Hello World!"));
-	cedar_addWidget(&window, Label(110, 40, 70, 40, "abcdefghijklmnopqrstuvwxyz"));
+	cedar_AddWidget(&window, CedarLabel(LABEL_HELLO, 10, 10, 70, 40, "Hello World!"));
+	cedar_AddWidget(&window, CedarLabel(LABEL_ALPHABET, 110, 40, 70, 40, "abcdefghijklmnopqrstuvwxyz"));
 
-	cedar_addWidget(&window, Button(40, 180, 60, 20, "Button!"));
+	cedar_AddWidget(&window, CedarButton(BUTTON_BUTTON, 40, 180, 60, 20, "Button!"));
 
-	cedar_display(&window);
+	cedar_RegisterEventHandler(&window, mainWindowEventHandler);
 
-	cedar_destroyWindow(&window);
+	cedar_Display(&window);
 
-	cedar_cleanup();
+	cedar_DestroyWindow(&window);
+
+	cedar_Cleanup();
 	return 0;
 }

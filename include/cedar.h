@@ -189,13 +189,13 @@ struct CedarMenuItem {
 /*
  * Initializes the library. This must be called before any other cedar functions
  */
-void cedar_init();
+void cedar_Init();
 
 /*
  * Cleans up after the library. This should be called after you are done using
  * the library.
  */
-void cedar_cleanup();
+void cedar_Cleanup();
 
 /*
  * Initializes a window
@@ -210,14 +210,6 @@ void cedar_InitWindow(CedarWindow *window);
  */
 void cedar_DestroyWindow(CedarWindow *window);
 /*
- * Registers an event handler for a window. Window event handlers are executed
- * in a LIFO order.
- *
- * window		The window to register the handler to
- * handler		The handler to register
- */
-void cedar_RegisterWindowEventHandler(CedarWindow *window, CedarEventHandler *handler);
-/*
  * Displays a window
  *
  * window		The window to display
@@ -225,13 +217,26 @@ void cedar_RegisterWindowEventHandler(CedarWindow *window, CedarEventHandler *ha
  */
 void cedar_Display(CedarWindow *window);
 
+void _cedar_RegisterWindowEventHandler(CedarWindow *window, CedarEventHandlerCallback callback);
+void _cedar_RegisterWidgetEventHandler(CedarWidget *widget, CedarEventHandlerCallback callback);
+
+/*
+ * Registers an event handler for a component.
+ *
+ * component	The component to register the handler to
+ * handler		The handler to register
+ */
+#define cedar_RegisterEventHandler(component, callback) _Generic((component),\
+	CedarWindow *: _cedar_RegisterWindowEventHandler((component)->handlers, callback),\
+	CedarWidget *: _cedar_RegisterWidgetEventHandler((component)->handlers, callback))
+
 CALLBACKRESULT _cedar_dispatchEvent(CedarEventHandler *firstHandler, void *self, EVENT event, uint24_t param);
 
 /*
  * Dispatch an event to a component. Component can be a pointer to any type as
  * long as it has a handlers member.
  */
-#define cedar_dispatchEvent(event, component, param) _cedar_dispatchEvent(component->handlers, component, event, param)
+#define cedar_dispatchEvent(event, component, param) _cedar_dispatchEvent((component)->handlers, component, event, param)
 
 /*
  * Adds a widget to a window

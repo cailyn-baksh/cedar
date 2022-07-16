@@ -26,7 +26,7 @@ CALLBACKRESULT defaultButtonHandler(CedarWidget *self, EVENT event, uint24_t par
 				gfx_SetTextBGColor(0);
 				gfx_SetTextTransparentColor(0);
 
-				wrapTextInBox(((ButtonData *)self->data)->text, pos->x+2, pos->y+2, self->bounds.width-2, self->bounds.height-2);
+				cedar_wrapTextInBox(((ButtonData *)self->data)->text, pos->x+2, pos->y+2, self->bounds.width-2, self->bounds.height-2);
 
 				gfx_SetTextFGColor(0);
 				gfx_SetTextBGColor(255);
@@ -34,7 +34,7 @@ CALLBACKRESULT defaultButtonHandler(CedarWidget *self, EVENT event, uint24_t par
 			} else {
 				// Draw unfocused
 				gfx_Rectangle(pos->x, pos->y, self->bounds.width, self->bounds.height);
-				wrapTextInBox(((ButtonData *)self->data)->text, pos->x+2, pos->y+2, self->bounds.width-2, self->bounds.height-2);
+				cedar_wrapTextInBox(((ButtonData *)self->data)->text, pos->x+2, pos->y+2, self->bounds.width-2, self->bounds.height-2);
 			}
 		}
 			break;
@@ -74,10 +74,12 @@ CedarWidget *CedarButton(ID id, int x, int y, int width, int height, const char 
 	widget->handlers->callback = defaultButtonHandler;
 	widget->handlers->next = NULL;
 
-	ButtonData *data = widget->data;
+	ButtonData *data = (ButtonData *)widget->data;
 
 	data->text = malloc(strlen(text) * sizeof(char));
 	strcpy(data->text, text);
 
 	data->focused = false;
+
+	return widget;
 }

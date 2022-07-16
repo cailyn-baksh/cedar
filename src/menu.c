@@ -2,25 +2,27 @@
 
 #include "cedar.h"
 
-void cedar_setMenu(Window *window, Menu *menu) {
+void cedar_SetMenu(CedarWindow *window, CedarMenu *menu) {
 	window->menu = menu;
-	window->realTop = MENUBAR_HEIGHT;
+	window->bounds.y = MENUBAR_HEIGHT;
 }
 
-void cedar_initMenu(Menu *menu) {
+void cedar_InitMenu(CedarMenu *menu) {
 	menu->first = NULL;
 	menu->last = NULL;
 	menu->selected = NULL;
-	menu->active = false;
+	menu->submenuActive = false;
 }
 
-void cedar_addMenuSeparator(Menu *menu) {
-	MenuItem *item = malloc(sizeof(MenuItem));
+void cedar_AddMenuSeparator(CedarMenu *menu) {
+	CedarMenuItem *item = malloc(sizeof(CedarMenuItem));
 
-	item->type = MENUITEM_SEPARATOR;
-	item->invertColours = false;
+	item->id = ID_ANONYMOUS;
+
+	item->label[0] = '\0';
+
 	item->parent = menu;
-
+	item->child = NULL;
 
 	item->next = NULL;
 	item->prev = menu->last;
@@ -30,17 +32,16 @@ void cedar_addMenuSeparator(Menu *menu) {
 	if (menu->first == NULL) menu->first = item;
 }
 
-void cedar_addMenuItem(Menu *parent, const char *label, ID id) {
-	MenuItem *item = malloc(sizeof(MenuItem));
+void cedar_AddMenuItem(CedarMenu *parent, ID id, const char *label) {
+	CedarMenuItem *item = malloc(sizeof(CedarMenuItem));
 
-	item->type = MENUITEM_BUTTON;
-	item->invertColours = false;
+	item->id = id;
 
 	strncpy(item->label, label, 11);
 	item->label[11] = '\0';
-	item->id = id;
 
 	item->parent = parent;
+	item->child = NULL;
 
 	item->next = NULL;
 	item->prev = parent->last;
@@ -50,17 +51,16 @@ void cedar_addMenuItem(Menu *parent, const char *label, ID id) {
 	if (parent->first == NULL) parent->first = item;
 }
 
-void cedar_addSubmenu(Menu *parent, const char *label, Menu *child) {
-	MenuItem *item = malloc(sizeof(MenuItem));
+void cedar_AddSubmenu(CedarMenu *parent, ID id, const char *label, CedarMenu *child) {
+	CedarMenuItem *item = malloc(sizeof(CedarMenuItem));
 
-	item->type = MENUITEM_PARENT;
-	item->invertColours = false;
+	item->id = id;
 
 	strncpy(item->label, label, 11);
 	item->label[11] = '\0';
 
-	item->child = child;
 	item->parent = parent;
+	item->child = child;
 
 	item->next = NULL;
 	item->prev = parent->last;

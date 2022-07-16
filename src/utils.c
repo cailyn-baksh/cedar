@@ -5,7 +5,7 @@
 					  || c == ' '\
 					  || c == '\t')
 
-void wrapTextInBox(const char *str, int x, int y, unsigned int width, unsigned int height) {
+void cedar_wrapTextInBox(const char *str, int x, int y, unsigned int width, unsigned int height) {
 	const char *startOfWord = str;
 
 	unsigned int xOffset = 0;

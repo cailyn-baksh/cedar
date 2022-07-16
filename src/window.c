@@ -39,7 +39,7 @@ CedarMenu *getActiveSubmenu(CedarMenu *parent) {
 	return menu;
 }
 
-CedarMenuItem *getNextSelectableMenuitem(CedarMenu *menu) {
+CedarMenuItem *getNextSelectableMenuItem(CedarMenu *menu) {
 	CedarMenuItem *item = menu->selected->next;
 
 	while (item != NULL && isMenuItemSeparator(item)) {
@@ -49,7 +49,7 @@ CedarMenuItem *getNextSelectableMenuitem(CedarMenu *menu) {
 	return item;
 }
 
-CedarMenuItem *getPrevSelectableMenuitem(CedarMenu *menu) {
+CedarMenuItem *getPrevSelectableMenuItem(CedarMenu *menu) {
 	CedarMenuItem *item = menu->selected->prev;
 
 	while (item != NULL && isMenuItemSeparator(item)) {
@@ -81,7 +81,23 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 					// up arrow
 					if (self->menu != NULL) {
 						// this window has a menu; modify menu selection
-						if (self->menu->submenuActive
+						if (self->menu->selected == NULL) {
+							// no menu is selected; select menu bar
+							self->menu->selected = self->menu->first;
+							//self->menu->selected = getNextSelectableMenuItem(self->menu);
+
+							if (self->menu->selected != NULL) {
+								if (self->widgets.selected != NULL) {
+									// dispatch blur event to previously selected widget
+									callbackReturnCode = cedar_dispatchEvent(EVENT_BLUR, self->widgets.selected, 0);
+
+									switch (callbackReturnCode) {
+										case CALLBACK_EXIT:
+											return CALLBACK_EXIT;
+									}
+								}
+							}
+						} else if (self->menu->submenuActive
 						 && self->menu->selected->child != NULL) {
 							// a submenu is active
 							CedarMenu *submenu = getActiveSubmenu(self->menu);
@@ -95,30 +111,9 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 								submenu->submenuActive = false;
 								submenu->selected = NULL;
 							}
-						} else if (self->menu->selected == NULL) {
-							// no menu is selected; select menu bar
-							CedarMenuItem *firstItem = self->menu->first;
-
-							while (firstItem != NULL && isMenuItemSeparator(firstItem)) {
-								// try next one
-								firstItem = firstItem->next;
-							}
-
-							if (firstItem != NULL) {
-								// select first selectable item in the menubar
-								self->menu->selected = firstItem;
-
-								if (self->widgets.selected != NULL) {
-									// dispatch blur event to previously selected widget
-									callbackReturnCode = cedar_dispatchEvent(EVENT_BLUR, self->widgets.selected, 0);
-
-									switch (callbackReturnCode) {
-										case CALLBACK_EXIT:
-											return CALLBACK_EXIT;
-									}
-								}
-							}
 						}
+
+						self->repaint = true;
 					}
 
 					// dont propagate this event to the widget
@@ -131,7 +126,7 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 						 && self->menu->selected->child != NULL) {
 							// submenu is active
 							CedarMenu *submenu = getActiveSubmenu(self->menu);
-							CedarMenuItem *nextItem = getNextSelectableMenuitem(submenu);
+							CedarMenuItem *nextItem = getNextSelectableMenuItem(submenu);
 
 							if (nextItem != NULL) {
 								// Select next submenu item
@@ -152,6 +147,8 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 								}
 							}
 						}
+
+						self->repaint = true;
 					}
 
 					// dont propagate this event to the widget
@@ -160,12 +157,13 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 					// right arrow
 					if (self->menu != NULL && self->menu->selected != NULL) {
 						// Select next menu item that is not a separator
-						CedarMenuItem *nextItem = getNextSelectableMenuitem(self->menu);
+						CedarMenuItem *nextItem = getNextSelectableMenuItem(self->menu);
 
 						if (nextItem != NULL) {
 							// There is a next item that we can select
 							deselectAllSubmenus(self->menu);
 							self->menu->selected = nextItem;
+							self->repaint = true;
 						}
 					} else if (self->widgets.selected->next != NULL) {
 						// Select next widgets
@@ -203,6 +201,8 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 							// There is a previous item that we can select
 							deselectAllSubmenus(self->menu);
 							self->menu->selected = prevItem;
+
+							self->repaint = true;
 						}
 					} else if (self->widgets.selected->next != NULL) {
 						// Select prev widgets
@@ -231,12 +231,16 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 
 					return CALLBACK_DO_NOT_PROPAGATE;
 			}
+			break;
 		case EVENT_KEYUP:
 			switch (param) {
 				case CEDAR_KB_ENTER:
 					if (self->menu != NULL && self->menu->selected != NULL) {
 						// menu is selected
-						CedarMenuItem *selected = getLastSelectedMenuItem(self->menu);
+						CedarMenuItem *selected =  cedar_GetLastSelectedMenuItem(self->menu);
+
+						// FIXME: selected != self->parent->selected
+						if (selected != NULL) DBGPRINT("%d\n", selected == selected->parent->selected);
 
 						if (isMenuItemButton(selected)) {
 							// button menu item
@@ -249,11 +253,14 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 							// submenu
 							selected->parent->submenuActive = true;
 							selected->child->selected = selected->child->first;
+							DBGPRINT("submenu %x (%d, %d)\n", selected->id, selected->parent->submenuActive, selected->parent == self->menu);
 
-							CedarMenuItem *nextSelectable = getNextSelectableMenuitem(selected->child);
+							CedarMenuItem *nextSelectable = getNextSelectableMenuItem(selected->child);
 							if (nextSelectable != NULL) {
 								selected->child->selected = nextSelectable;
 							}
+
+							self->repaint = true;
 						}
 
 						// event was for the menu so don't propagate to widgets
@@ -286,7 +293,7 @@ void cedar_InitWindow(CedarWindow *window) {
 	window->handlers->next = NULL;
 }
 
-void cedar_destroyWindow(CedarWindow *window) {
+void cedar_DestroyWindow(CedarWindow *window) {
 	// Clean up menu bar
 
 	// Clean up widgets
@@ -294,21 +301,21 @@ void cedar_destroyWindow(CedarWindow *window) {
 		if (current->prev != NULL) {
 			// everything always gets destroyed
 			cedar_dispatchEvent(EVENT_DESTROY, current->prev, 0);
-			cedar_destroyWidget(current->prev);
+			cedar_DestroyWidget(current->prev);
 		}
 	}
 
 	free(window);
 }
 
-void cedar_addWidget(CedarWindow *window, CedarWidget *widget) {
-	if (window->widgets.first == NULL) {
+void cedar_AddWidget(CedarWindow *window, CedarWidget *widget) {
+	if (window->widgets.last != NULL) {
+		// link this widget into the list
+		widget->prev = window->widgets.last;
+		widget->prev->next = widget;
+	} else {
 		// This is the first widget
 		window->widgets.first = widget;
-	} else {
-		// Not the first widget, link this widget into the list
-		window->widgets.last->next = widget;
-		widget->prev = window->widgets.last;
 	}
 	window->widgets.last = widget;
 }
@@ -372,30 +379,18 @@ void paintActiveSubmenus(CedarMenu *menu) {
 /*
  * Returns the last selected menu item in a menu
  */
-CedarMenuItem *getLastSelectedMenuItem(CedarMenu *menu) {
+CedarMenuItem *cedar_GetLastSelectedMenuItem(CedarMenu *menu) {
 	if (menu->selected != NULL
-	 && isMenuItemSubmenu(menu->selected)
+	 && menu->selected->child != NULL
 	 && menu->submenuActive) {
 		// find selected item in submenu
-		return getLastSelectedMenuItem(menu->selected->child);
+		return cedar_GetLastSelectedMenuItem(menu->selected->child);
 	 } else {
-		 return menu->selected;
+		return menu->selected;
 	 }
 }
 
-CALLBACKRESULT _cedar_dispatchEvent(CedarEventHandler *firstHandler, void *self, EVENT event, uint24_t param) {
-	CALLBACKRESULT result = CALLBACK_NORMAL;
-	CedarEventHandler *handler = firstHandler;
-
-	while (result == CALLBACK_NORMAL && handler != NULL) {
-		result = handler->callback(self, event, param);
-		handler = handler->next;
-	}
-
-	return result;
-}
-
-void cedar_display(CedarWindow *window) {
+void cedar_Display(CedarWindow *window) {
 	uint24_t callbackReturnCode;
 
 	callbackReturnCode = cedar_dispatchEvent(EVENT_CREATE, window, 0);
@@ -464,7 +459,7 @@ void cedar_display(CedarWindow *window) {
 						// This key was pressed
 						uint24_t keycode = mask | (i << 8);
 
-						if (keycode != kb_Key2nd && keycode != kb_KeyAlpha) {
+						if (keycode == kb_Key2nd && keycode == kb_KeyAlpha) {
 							// ignore meta key release
 							continue;
 						}
@@ -491,6 +486,7 @@ void cedar_display(CedarWindow *window) {
 						}
 
 						dontPropagateKeyup:
+						;
 					}
 				}
 			} else if ((prevKbState[i] & kb_Data[i]) != kb_Data[i]) {
@@ -501,7 +497,7 @@ void cedar_display(CedarWindow *window) {
 						// This key was released
 						uint24_t keycode = mask | (i << 8);
 
-						if (keycode != kb_Key2nd && keycode != kb_KeyAlpha) {
+						if (keycode == kb_Key2nd && keycode == kb_KeyAlpha) {
 							// ignore meta key release
 							continue;
 						}
@@ -517,7 +513,6 @@ void cedar_display(CedarWindow *window) {
 								return;
 							case CALLBACK_DO_NOT_PROPAGATE:
 								goto dontPropagateKeydown;
-							case CALLBACK_NORMAL:
 						}
 
 						callbackReturnCode = cedar_dispatchEvent(EVENT_KEYDOWN, window->widgets.selected, keycode);
@@ -527,15 +522,10 @@ void cedar_display(CedarWindow *window) {
 						}
 
 						dontPropagateKeydown:
+						;
 					}
 				}
 			}
-		}
-
-		callbackReturnCode = dispatchEvents(window);
-		switch (callbackReturnCode) {
-			case CALLBACK_EXIT:
-				return;
 		}
 
 		/* Paint */
@@ -551,25 +541,26 @@ void cedar_display(CedarWindow *window) {
 			if (widget->repaint || window->repaint) {
 				// the position of the widget in the drawing buffer
 				CedarPoint realPos = {
-					.x = widget->bounds.x - window->origin.x,
-					.y = widget->bounds.y - window->origin.y
+					.x = (widget->bounds.x + window->bounds.x) - window->origin.x,
+					.y = (widget->bounds.y + window->bounds.y) - window->origin.y
 				};
 
 				if (realPos.x >= window->bounds.x
-				 && realPos.x + widget->bounds.x <= window->bounds.x + window->bounds.width
+				 && realPos.x + widget->bounds.width <= window->bounds.x + window->bounds.width
 				 && realPos.y >= window->bounds.y
-				 && realPos.y + widget->bounds.y <= window->bounds.y + window->bounds.height) {
+				 && realPos.y + widget->bounds.height <= window->bounds.y + window->bounds.height) {
 					// Widget is fully visible
+
 					clearRect(realPos.x, realPos.y, widget->bounds.width, widget->bounds.height);
 
-					callbackReturnCode = cedar_dispatchEvent(EVENT_PAINT, widget, &realPos);
+					callbackReturnCode = cedar_dispatchEvent(EVENT_PAINT, widget, (uint24_t)&realPos);
 					// return code is checked after blitting
 
 					if (!window->repaint) {
 						// only blit if we're not going to blit everything later
 						gfx_BlitRectangle(gfx_buffer, realPos.x, realPos.y, widget->bounds.width, widget->bounds.height);
-						widget->repaint = false;  // repaint finished
 					}
+					widget->repaint = false;  // repaint finished
 
 					switch (callbackReturnCode) {
 						case CALLBACK_EXIT:

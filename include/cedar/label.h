@@ -23,6 +23,6 @@ typedef struct {
  * text		The content of the label
  * Returns a new Label widget
  */
-CedarWidget *CedarLabel(int x, int y, int width, int height, const char *text);
+CedarWidget *CedarLabel(ID id, int x, int y, int width, int height, const char *text);
 
 #endif  // _LIBCEDAR_LABEL_H_
