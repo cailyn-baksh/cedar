@@ -30,6 +30,7 @@ CedarWidget *CedarLabel(ID id, int x, int y, int width, int height, const char *
 	widget->id = id;
 	widget->attrs = 0;
 
+	widget->parent = NULL;
 	widget->next = NULL;
 	widget->prev = NULL;
 

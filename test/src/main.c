@@ -23,6 +23,9 @@ CALLBACKRESULT mainWindowEventHandler(CedarWindow *self, EVENT event, uint24_t p
 				return CALLBACK_EXIT;
 			}
 			break;
+		case EVENT_BUTTONPRESS:
+			dbg_printf("button press!\n");
+			break;
 	}
 
 	return CALLBACK_NORMAL;

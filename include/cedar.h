@@ -121,6 +121,7 @@ struct CedarWidget {
 	uint24_t attrs;  // IDEA: make attrs quasi-constant by creating 3 bytes of
 					 // padding that can only be accessed through assembly
 
+	CedarWindow *parent;
 	CedarWidget *prev;
 	CedarWidget *next;
 

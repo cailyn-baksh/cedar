@@ -46,7 +46,9 @@ CALLBACKRESULT defaultButtonHandler(CedarWidget *self, EVENT event, uint24_t par
 			break;
 		case EVENT_KEYUP:
 			// Send button press event to parent window
-			// TODO: provide way for widget handlers to access parent window
+			if (param == CEDAR_KB_ENTER) {
+				cedar_dispatchEvent(EVENT_BUTTONPRESS, self->parent, (uint24_t)self);
+			}
 			break;
 	}
 
@@ -59,6 +61,7 @@ CedarWidget *CedarButton(ID id, int x, int y, int width, int height, const char 
 	widget->id = id;
 	widget->attrs = ATTR_FOCUSABLE;
 
+	widget->parent = NULL;
 	widget->prev = NULL;
 	widget->next = NULL;
 

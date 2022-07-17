@@ -317,6 +317,7 @@ void cedar_AddWidget(CedarWindow *window, CedarWidget *widget) {
 		window->widgets.first = widget;
 	}
 	window->widgets.last = widget;
+	widget->parent = window;
 }
 
 /*

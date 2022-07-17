@@ -32,6 +32,9 @@ typedef uint24_t ID;
 
 typedef CALLBACKRESULT CedarEventHandlerCallback(void *self, EVENT event, uint24_t param);
 
+// events 0x000000-0x000FFF reserved for built-in events
+// 0x000000-0x0007FF used for base events
+// 0x000800-0x000FFF used for built-in widget events
 #define EVENT_CREATE				((EVENT)0x000001)
 #define EVENT_DESTROY				((EVENT)0x000002)
 #define EVENT_PAINT					((EVENT)0x000003)
@@ -44,6 +47,7 @@ typedef CALLBACKRESULT CedarEventHandlerCallback(void *self, EVENT event, uint24
 #define EVENT_TICK					((EVENT)0x00000A)
 #define EVENT_VSCROLL				((EVENT)0x00000B)
 #define EVENT_HSCROLL				((EVENT)0x00000C)
+#define EVENT_BUTTONPRESS			((EVENT)0x000801)
 
 #define CALLBACK_NORMAL					((CALLBACKRESULT)0x000000)
 #define CALLBACK_EXIT					((CALLBACKRESULT)0x000001)
