@@ -4,19 +4,42 @@
 #ifndef _LIBCEDAR_H_
 #define _LIBCEDAR_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define _LIBCEDAR_Q(s) #s
 #define _LIBCEDAR_QUOTE(s) _LIBCEDAR_Q(s)
 
 // Version info
 // minor version is incremented each release
 // major version is incremented after each breaking change (after major version 1)
-#define LIBCEDAR_MAJOR_VERSION 0
-#define LIBCEDAR_MINOR_VERSION 4
-#define LIBCEDAR_VERSION_STR _LIBCEDAR_QUOTE(LIBCEDAR_MAJOR_VERSION) "." _LIBCEDAR_QUOTE(LIBCEDAR_MINOR_VERSION)
+#define LIBCEDAR_MAJOR		0
+#define LIBCEDAR_MINOR		4
+#define LIBCEDAR_REVISION	0
+#define LIBCEDAR_VERSION_STR _LIBCEDAR_QUOTE(LIBCEDAR_MAJOR) "." _LIBCEDAR_QUOTE(LIBCEDAR_MINOR) "." _LIBCEDAR_QUOTE(LIBCEDAR_REVISION)
+
+#ifdef LIBCEDAR_CHECK_VERSION
+
+#if LIBCEDAR_MAJOR != LIBCEDAR_TARGET_MAJOR
+#error "Expected libcedar major version " _LIBCEDAR_QUOTE(LIBCEDAR_TARGET_MAJOR) " but got " _LIBCEDAR_QUOTE(LIBCEDAR_MAJOR)
+#endif  // major version
+
+#if LIBCEDAR_MINOR < LIBCEDAR_TARGET_MINOR
+#error "Expected libcedar minor version " _LIBCEDAR_QUOTE(LIBCEDAR_TARGET_MINOR) " but got " _LIBCEDAR_QUOTE(LIBCEDAR_MINOR)
+#endif  // minor version
+
+#if defined(LIBCEDAR_VERSION_REQUIRE_SAME)
+#if (LIBCEDAR_MINOR != LIBCEDAR_TARGET_MINOR) || (LIBCEDAR_REVISION != LIBCEDAR_TARGET_REVISION)
+#error "Libcedar version " _LIBCEDAR_QUOTE(LIBCEDAR_MAJOR) "." _LIBCEDAR_QUOTE(LIBCEDAR_MINOR) "." _LIBCEDAR_QUOTE(LIBCEDAR_REVISION) " required but got version " LIBCEDAR_VERSION_STR
+#endif
+#elif defined(LIBCEDAR_VERSION_REQUIRE_SAME_OR_BETTER)
+#if LIBCEDAR_REVISION < LIBCEDAR_TARGET_REVISION
+#error "Libcedar version better than revision " _LIBCEDAR_QUOTE(LIBCEDAR_REVISION) " required"
+#endif
+#endif
+
+#endif  // LIBCEDAR_CHECK_VERSION
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdbool.h>
 #include <stdint.h>
