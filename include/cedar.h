@@ -26,6 +26,8 @@ extern "C" {
 
 #include "cedar/defs.h"
 
+// TODO: make it easier to traverse parent/child relationships
+
 /*
  * A point
  *
@@ -154,6 +156,7 @@ struct CedarMenu {
 	CedarMenuItem *first;
 	CedarMenuItem *last;
 	CedarMenuItem *selected;
+	CedarMenu *parent;
 	bool submenuActive;
 };
 

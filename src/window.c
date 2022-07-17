@@ -107,7 +107,7 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 								submenu->selected = prevItem;
 							} else {
 								// Exit submenu
-								submenu->submenuActive = false;
+								submenu->parent->submenuActive = false;
 								submenu->selected = NULL;
 							}
 						}
@@ -119,8 +119,8 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 					return CALLBACK_DO_NOT_PROPAGATE;
 				case CEDAR_KB_DOWN:
 					// down arrow
-					if (self->menu != NULL) {
-						// this window has a menu; modify menu selection
+					if (self->menu != NULL && self->menu->selected != NULL) {
+						// this window has a menu and it is selected; modify menu selection
 						if (self->menu->submenuActive
 						 && self->menu->selected->child != NULL) {
 							// submenu is active
@@ -131,7 +131,7 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 								// Select next submenu item
 								submenu->selected = nextItem;
 							}
-						} else if (self->menu->selected != NULL) {
+						} else {
 							// no submenu active; deselect menu bar
 							self->menu->selected = NULL;
 
@@ -340,7 +340,8 @@ void paintActiveSubmenus(CedarMenu *menu) {
 		if (menu->submenuActive) {
 			// This is the active submenu; paint it
 			gfx_FillRectangle(7, MENUBAR_HEIGHT+2, MENU_DROPDOWN_WIDTH, MENU_DROPDOWN_HEIGHT);
-			clearRect(6, MENUBAR_HEIGHT-1, MENU_DROPDOWN_WIDTH-1, MENU_DROPDOWN_HEIGHT-1);
+			clearRect(5, MENUBAR_HEIGHT, MENU_DROPDOWN_WIDTH, MENU_DROPDOWN_HEIGHT);
+			gfx_Rectangle(5, MENUBAR_HEIGHT, MENU_DROPDOWN_WIDTH, MENU_DROPDOWN_HEIGHT);
 
 			int submenuItemY = MENUBAR_HEIGHT + 5;
 			for (CedarMenuItem *current=submenu->first; current != NULL; current = current->next) {
@@ -528,6 +529,10 @@ void cedar_Display(CedarWindow *window) {
 		}
 
 		/* Paint */
+		if (window->repaint) {
+			gfx_FillScreen(255);
+		}
+
 		callbackReturnCode = cedar_dispatchEvent(EVENT_PAINT, window, 0);
 		switch (callbackReturnCode) {
 			case CALLBACK_EXIT:

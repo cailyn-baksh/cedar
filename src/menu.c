@@ -16,6 +16,7 @@ void cedar_InitMenu(CedarMenu *menu) {
 	menu->first = NULL;
 	menu->last = NULL;
 	menu->selected = NULL;
+	menu->parent = NULL;
 	menu->submenuActive = false;
 }
 
@@ -72,6 +73,8 @@ void cedar_AddSubmenu(CedarMenu *parent, ID id, const char *label, CedarMenu *ch
 
 	item->parent = parent;
 	item->child = child;
+
+	child->parent = parent;
 
 	item->next = NULL;
 	item->prev = parent->last;
