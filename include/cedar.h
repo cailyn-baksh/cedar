@@ -26,13 +26,17 @@
 #endif  // minor version
 
 #if defined(LIBCEDAR_VERSION_REQUIRE_SAME)
+
 #if (LIBCEDAR_MINOR != LIBCEDAR_TARGET_MINOR) || (LIBCEDAR_REVISION != LIBCEDAR_TARGET_REVISION)
 #error "Libcedar version " _LIBCEDAR_QUOTE(LIBCEDAR_MAJOR) "." _LIBCEDAR_QUOTE(LIBCEDAR_MINOR) "." _LIBCEDAR_QUOTE(LIBCEDAR_REVISION) " required but got version " LIBCEDAR_VERSION_STR
 #endif
+
 #elif defined(LIBCEDAR_VERSION_REQUIRE_SAME_OR_BETTER)
+
 #if LIBCEDAR_REVISION < LIBCEDAR_TARGET_REVISION
 #error "Libcedar version better than revision " _LIBCEDAR_QUOTE(LIBCEDAR_REVISION) " required"
 #endif
+
 #endif
 
 #endif  // LIBCEDAR_CHECK_VERSION
@@ -58,8 +62,8 @@ extern "C" {
  * y	The y coordinate of the point
  */
 struct CedarPoint {
-	uint24_t x;
-	uint24_t y;
+	int x;
+	int y;
 };
 
 /*
@@ -71,10 +75,10 @@ struct CedarPoint {
  * height	The height of the rectangle
  */
 struct CedarRect {
-	uint24_t x;
-	uint24_t y;
-	uint24_t width;
-	uint24_t height;
+	int x;
+	int y;
+	int width;
+	int height;
 };
 
 #define cedar_rectIsAInsideB(a, b)\
@@ -117,8 +121,13 @@ struct CedarWindow {
 
 	CedarMenu *menu;
 
-	CedarRect bounds;
+	CedarRect frame;
 	CedarPoint origin;
+
+	enum {
+		WINDOW_SCROLL_PAGE,
+		WINDOW_SCROLL_WIDGET
+	} scrollMode;
 
 	bool repaint;
 

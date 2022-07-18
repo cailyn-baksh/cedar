@@ -267,6 +267,9 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 					}
 			}
 			break;
+		case EVENT_HSCROLL:
+		case EVENT_VSCROLL:
+			self->repaint = true;
 	}
 
 	return CALLBACK_NORMAL;
@@ -279,10 +282,10 @@ void cedar_InitWindow(CedarWindow *window) {
 
 	window->menu = NULL;
 
-	window->bounds.x = 0;
-	window->bounds.y = 0;
-	window->bounds.width = GFX_LCD_WIDTH;
-	window->bounds.height = GFX_LCD_HEIGHT;
+	window->frame.x = 0;
+	window->frame.y = 0;
+	window->frame.width = GFX_LCD_WIDTH;
+	window->frame.height = GFX_LCD_HEIGHT;
 
 	window->origin.x = 0;
 	window->origin.y = 0;
@@ -529,6 +532,60 @@ void cedar_Display(CedarWindow *window) {
 			}
 		}
 
+		// Dispatch scroll event
+		{
+			CedarWidget *selected = window->widgets.selected;
+			int delta = 0;
+
+			if (selected->bounds.x < window->frame.x) {
+				// scroll left
+				DBGPRINT("left\n");
+				switch (window->scrollMode) {
+					case WINDOW_SCROLL_WIDGET:
+						delta = selected->bounds.x - window->frame.x;
+						break;
+				}
+
+				window->frame.x += delta;
+				cedar_dispatchEvent(EVENT_HSCROLL, window, delta);
+			} else if (selected->bounds.x + selected->bounds.width > window->frame.x + window->frame.width) {
+				// scroll right
+				DBGPRINT("right\n");
+				switch (window->scrollMode) {
+					case WINDOW_SCROLL_WIDGET:
+						delta = (selected->bounds.x + selected->bounds.width - window->frame.width) - window->frame.x;
+						break;
+				}
+
+				window->frame.x += delta;
+				cedar_dispatchEvent(EVENT_HSCROLL, window, delta);
+			}
+
+			if (selected->bounds.y > window->frame.y) {
+				// scroll up
+				DBGPRINT("up\n");
+				switch (window->scrollMode) {
+					case WINDOW_SCROLL_WIDGET:
+						delta = window->frame.y - selected->bounds.y;
+						break;
+				}
+
+				window->frame.y -= delta;
+				cedar_dispatchEvent(EVENT_VSCROLL, window, delta);
+			} else if (selected->bounds.y - selected->bounds.height < window->frame.y - window->frame.height) {
+				// scroll down
+				DBGPRINT("down\n");
+				switch (window->scrollMode) {
+					case WINDOW_SCROLL_WIDGET:
+						delta = window->frame.y - (selected->bounds.y - selected->bounds.height + window->frame.height);
+						break;
+				}
+
+				window->frame.y -= delta;
+				cedar_dispatchEvent(EVENT_VSCROLL, window, delta);
+			}
+		}
+
 		/* Paint */
 		if (window->repaint) {
 			gfx_FillScreen(255);
@@ -546,14 +603,14 @@ void cedar_Display(CedarWindow *window) {
 			if (widget->repaint || window->repaint) {
 				// the position of the widget in the drawing buffer
 				CedarPoint realPos = {
-					.x = (widget->bounds.x + window->bounds.x) - window->origin.x,
-					.y = (widget->bounds.y + window->bounds.y) - window->origin.y
+					.x = (widget->bounds.x + window->frame.x) - window->origin.x,
+					.y = (widget->bounds.y + window->frame.y) - window->origin.y
 				};
 
-				if (realPos.x >= window->bounds.x
-				 && realPos.x + widget->bounds.width <= window->bounds.x + window->bounds.width
-				 && realPos.y >= window->bounds.y
-				 && realPos.y + widget->bounds.height <= window->bounds.y + window->bounds.height) {
+				if (realPos.x >= window->frame.x
+				 && realPos.x + widget->bounds.width <= window->frame.x + window->frame.width
+				 && realPos.y >= window->frame.y
+				 && realPos.y + widget->bounds.height <= window->frame.y + window->frame.height) {
 					// Widget is fully visible
 
 					clearRect(realPos.x, realPos.y, widget->bounds.width, widget->bounds.height);
@@ -581,7 +638,7 @@ void cedar_Display(CedarWindow *window) {
 		if (window->menu != NULL) {
 			unsigned int menuBarPaintOffset = 5;
 
-			clearRect(0, 0, window->bounds.width, MENUBAR_HEIGHT);
+			clearRect(0, 0, window->frame.width, MENUBAR_HEIGHT);
 
 			for (CedarMenuItem *current=window->menu->first; current != NULL; current = current->next) {
 				if (isMenuItemSeparator(current)) {
@@ -591,7 +648,7 @@ void cedar_Display(CedarWindow *window) {
 				} else {
 					unsigned int labelWidth = gfx_GetStringWidth(current->label);
 
-					if (menuBarPaintOffset + labelWidth > window->bounds.width) {
+					if (menuBarPaintOffset + labelWidth > window->frame.width) {
 						// no more room to paint
 						// TODO: allow menu to scroll
 						break;
@@ -616,7 +673,7 @@ void cedar_Display(CedarWindow *window) {
 				}
 			}
 
-			gfx_HorizLine_NoClip(0, MENUBAR_HEIGHT, window->bounds.width);
+			gfx_HorizLine_NoClip(0, MENUBAR_HEIGHT, window->frame.width);
 
 			paintActiveSubmenus(window->menu);
 		}

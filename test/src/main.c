@@ -12,6 +12,7 @@
 #define LABEL_HELLO			0x0101
 #define LABEL_ALPHABET		0x0102
 #define BUTTON_BUTTON		0x0103
+#define BUTTON_OFFSCREEN	0x0104
 
 CALLBACKRESULT mainWindowEventHandler(CedarWindow *self, EVENT event, uint24_t param) {
 	switch (event) {
@@ -24,7 +25,20 @@ CALLBACKRESULT mainWindowEventHandler(CedarWindow *self, EVENT event, uint24_t p
 			}
 			break;
 		case EVENT_BUTTONPRESS:
-			dbg_printf("button press!\n");
+			switch (param) {
+				case BUTTON_BUTTON:
+					dbg_printf("button press!\n");
+					break;
+				case BUTTON_OFFSCREEN:
+					dbg_printf("btn2\n");
+					break;
+			}
+			break;
+		case EVENT_HSCROLL:
+			dbg_printf("hscroll %d\n", param);
+			break;
+		case EVENT_VSCROLL:
+			dbg_printf("vscroll %d\n", param);
 			break;
 	}
 
@@ -36,6 +50,8 @@ int main() {
 
 	CedarWindow window;
 	cedar_InitWindow(&window);
+
+	window.scrollMode = WINDOW_SCROLL_WIDGET;
 
 	// Add menu
 	CedarMenu menu;
@@ -53,6 +69,7 @@ int main() {
 	cedar_AddWidget(&window, CedarLabel(LABEL_ALPHABET, 110, 40, 70, 40, "abcdefghijklmnopqrstuvwxyz"));
 
 	cedar_AddWidget(&window, CedarButton(BUTTON_BUTTON, 40, 180, 60, 20, "Button!"));
+	cedar_AddWidget(&window, CedarButton(BUTTON_OFFSCREEN, 20, 380, 50, 20, "btn2"));
 
 	cedar_RegisterEventHandler(&window, mainWindowEventHandler);
 
