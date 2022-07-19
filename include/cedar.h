@@ -54,6 +54,7 @@ extern "C" {
 #include "cedar/defs.h"
 
 // TODO: make it easier to traverse parent/child relationships
+// TODO: switch to gfx_point_t and gfx_region_t
 
 /*
  * A point

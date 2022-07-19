@@ -203,7 +203,7 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 
 							self->repaint = true;
 						}
-					} else if (self->widgets.selected->next != NULL) {
+					} else if (self->widgets.selected->prev != NULL) {
 						// Select prev widgets
 						CedarWidget *prevWidget = self->widgets.selected->prev;
 						while (prevWidget != NULL
@@ -532,14 +532,15 @@ void cedar_Display(CedarWindow *window) {
 			}
 		}
 
-		// Dispatch scroll event
+		// Dispatch scroll events
 		{
 			CedarWidget *selected = window->widgets.selected;
 			int delta = 0;
 
+			// FIXME: window coords get stuck equal to widget coords when scrolling left/up
+
 			if (selected->bounds.x < window->frame.x) {
 				// scroll left
-				DBGPRINT("left\n");
 				switch (window->scrollMode) {
 					case WINDOW_SCROLL_WIDGET:
 						delta = selected->bounds.x - window->frame.x;
@@ -550,7 +551,6 @@ void cedar_Display(CedarWindow *window) {
 				cedar_dispatchEvent(EVENT_HSCROLL, window, delta);
 			} else if (selected->bounds.x + selected->bounds.width > window->frame.x + window->frame.width) {
 				// scroll right
-				DBGPRINT("right\n");
 				switch (window->scrollMode) {
 					case WINDOW_SCROLL_WIDGET:
 						delta = (selected->bounds.x + selected->bounds.width - window->frame.width) - window->frame.x;
@@ -561,27 +561,25 @@ void cedar_Display(CedarWindow *window) {
 				cedar_dispatchEvent(EVENT_HSCROLL, window, delta);
 			}
 
-			if (selected->bounds.y > window->frame.y) {
+			if (selected->bounds.y < window->frame.y) {
 				// scroll up
-				DBGPRINT("up\n");
 				switch (window->scrollMode) {
 					case WINDOW_SCROLL_WIDGET:
-						delta = window->frame.y - selected->bounds.y;
+						delta = selected->bounds.y - window->frame.y;
 						break;
 				}
 
-				window->frame.y -= delta;
+				window->frame.y += delta;
 				cedar_dispatchEvent(EVENT_VSCROLL, window, delta);
-			} else if (selected->bounds.y - selected->bounds.height < window->frame.y - window->frame.height) {
+			} else if (selected->bounds.y + selected->bounds.height > window->frame.y + window->frame.height) {
 				// scroll down
-				DBGPRINT("down\n");
 				switch (window->scrollMode) {
 					case WINDOW_SCROLL_WIDGET:
-						delta = window->frame.y - (selected->bounds.y - selected->bounds.height + window->frame.height);
+						delta = (selected->bounds.y + selected->bounds.height - window->frame.height) - window->frame.y;
 						break;
 				}
 
-				window->frame.y -= delta;
+				window->frame.y += delta;
 				cedar_dispatchEvent(EVENT_VSCROLL, window, delta);
 			}
 		}
@@ -601,26 +599,61 @@ void cedar_Display(CedarWindow *window) {
 
 		for (CedarWidget *widget=window->widgets.first; widget != NULL; widget = widget->next) {
 			if (widget->repaint || window->repaint) {
-				// the position of the widget in the drawing buffer
-				CedarPoint realPos = {
-					.x = (widget->bounds.x + window->frame.x) - window->origin.x,
-					.y = (widget->bounds.y + window->frame.y) - window->origin.y
+				// translate widget's coordinates to a position in the drawing buffer
+				CedarRect bufferRegion = {
+					.x = (widget->bounds.x + window->origin.x) - window->frame.x,
+					.y = (widget->bounds.y + window->origin.y) - window->frame.y,
+					.width = widget->bounds.width,
+					.height = widget->bounds.height
 				};
+				CedarPoint realPos = {
+					.x = bufferRegion.x,
+					.y = bufferRegion.y
+				};
+				bool onscreen = true;
 
-				if (realPos.x >= window->frame.x
-				 && realPos.x + widget->bounds.width <= window->frame.x + window->frame.width
-				 && realPos.y >= window->frame.y
-				 && realPos.y + widget->bounds.height <= window->frame.y + window->frame.height) {
+				if (bufferRegion.x < window->frame.x) {
+					// left side is off screen to the left
+					bufferRegion.x = 0;
+				} else if (bufferRegion.x > window->frame.x + window->frame.width) {
+					// left side is off screen to the right
+					onscreen = false;
+				}
+
+				if (bufferRegion.x + bufferRegion.width > window->frame.x + window->frame.width) {
+					// right side is off screen to the right
+					bufferRegion.width = window->frame.width - bufferRegion.x;
+				} else if (bufferRegion.x + bufferRegion.width < window->frame.x) {
+					// right side is off screen to the left
+					onscreen = false;
+				}
+
+				if (bufferRegion.y < window->frame.y) {
+					// top side is above top of the screen
+					bufferRegion.y = 0;
+				} else if (bufferRegion.y > window->frame.y + window->frame.height) {
+					// top side is below bottom of the screen
+					onscreen = false;
+				}
+
+				if (bufferRegion.y + bufferRegion.height > window->frame.y + window->frame.height) {
+					// bottom side is below the bottom of the screen
+					bufferRegion.height = window->frame.height - bufferRegion.y;
+				} else if (bufferRegion.y + bufferRegion.height < window->frame.y) {
+					// bottom side is above the top of the screen
+					onscreen = false;
+				}
+
+				if (onscreen) {
 					// Widget is fully visible
-
-					clearRect(realPos.x, realPos.y, widget->bounds.width, widget->bounds.height);
+					clearRect(bufferRegion.x, bufferRegion.y, bufferRegion.width, bufferRegion.height);
 
 					callbackReturnCode = cedar_dispatchEvent(EVENT_PAINT, widget, (uint24_t)&realPos);
 					// return code is checked after blitting
 
 					if (!window->repaint) {
 						// only blit if we're not going to blit everything later
-						gfx_BlitRectangle(gfx_buffer, realPos.x, realPos.y, widget->bounds.width, widget->bounds.height);
+						gfx_BlitRectangle(gfx_buffer, bufferRegion.x, bufferRegion.y, bufferRegion.width, bufferRegion.height);
 					}
 					widget->repaint = false;  // repaint finished
 

@@ -16,6 +16,12 @@ _cedar_Init:
 	call _gfx_SetDraw
 	pop hl
 
+	; gfx_SetTextConfig(gfx_text_clip) -> gfx_SetTextConfig(1)
+	ld l,1
+	push hl
+	call _gfx_SetTextConfig
+	pop hl
+
 	pop hl
 	ret
 
@@ -26,4 +32,5 @@ _cedar_Cleanup:
 
 	extern _gfx_Begin
 	extern _gfx_SetDraw
+	extern _gfx_SetTextConfig
 	extern _gfx_End

@@ -47,7 +47,7 @@ CALLBACKRESULT defaultButtonHandler(CedarWidget *self, EVENT event, uint24_t par
 		case EVENT_KEYUP:
 			// Send button press event to parent window
 			if (param == CEDAR_KB_ENTER) {
-				cedar_dispatchEvent(EVENT_BUTTONPRESS, self->parent, (uint24_t)self);
+				cedar_dispatchEvent(EVENT_BUTTONPRESS, self->parent, (uint24_t)self->id);
 			}
 			break;
 	}

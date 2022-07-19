@@ -34,12 +34,6 @@ CALLBACKRESULT mainWindowEventHandler(CedarWindow *self, EVENT event, uint24_t p
 					break;
 			}
 			break;
-		case EVENT_HSCROLL:
-			dbg_printf("hscroll %d\n", param);
-			break;
-		case EVENT_VSCROLL:
-			dbg_printf("vscroll %d\n", param);
-			break;
 	}
 
 	return CALLBACK_NORMAL;
@@ -69,7 +63,7 @@ int main() {
 	cedar_AddWidget(&window, CedarLabel(LABEL_ALPHABET, 110, 40, 70, 40, "abcdefghijklmnopqrstuvwxyz"));
 
 	cedar_AddWidget(&window, CedarButton(BUTTON_BUTTON, 40, 180, 60, 20, "Button!"));
-	cedar_AddWidget(&window, CedarButton(BUTTON_OFFSCREEN, 20, 380, 50, 20, "btn2"));
+	cedar_AddWidget(&window, CedarButton(BUTTON_OFFSCREEN, 420, 80, 50, 20, "btn2"));
 
 	cedar_RegisterEventHandler(&window, mainWindowEventHandler);
 

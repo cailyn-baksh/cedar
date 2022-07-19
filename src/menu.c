@@ -8,7 +8,7 @@ void cedar_SetMenu(CedarWindow *window, CedarMenu *menu) {
 
 	window->menu = menu;
 	window->frame.height -= MENUBAR_HEIGHT;
-	window->origin.y -= MENUBAR_HEIGHT;
+	window->origin.y += MENUBAR_HEIGHT;
 }
 
 void cedar_InitMenu(CedarMenu *menu) {
