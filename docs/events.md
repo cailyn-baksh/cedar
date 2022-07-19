@@ -28,20 +28,20 @@ Triggered when a widget loses focus.
 ## `EVENT_KEYDOWN`
 Triggered when a key is pressed while a widget is selected.
 
-**Substrates**: [Widget](#)
+**Substrates**: [Widget](#), [Window](window.md)
 
 ## `EVENT_KEYUP`
 Triggered when a key is released while a widget is selected.
 
-**Substrates**: [Widget](#)
+**Substrates**: [Widget](#), [Window](window.md)
 
 ## `EVENT_ENABLE`
-Triggered when a widget is enabled.
+Triggered when a widget is enabled. **Not Implemented**
 
 **Substrates**: [Widget](#)
 
 ## `EVENT_DISABLE`
-Triggered when a widget is disabled.
+Triggered when a widget is disabled. **Not Implemented**
 
 **Substrates**: [Widget](#)
 
@@ -51,14 +51,14 @@ Triggered when a menu item is selected.
 **Substrates**: [Window](window.md)
 
 ## `EVENT_HOTKEY`
-Triggered when a hotkey is pressed.
+Triggered when a hotkey is pressed. **Not Implemented**
 
 **Substrates**: [Window](window.md)
 
 ## `EVENT_TICK`
-Triggered when a timer ticks.
+Triggered when a timer ticks. **Not Implemented**
 
-**Substrates**:
+**Substrates**: [Window](window.md)
 
 ## `EVENT_VSCROLL`
 Triggered when a window scrolls vertically
@@ -69,3 +69,23 @@ Triggered when a window scrolls vertically
 Triggered when a window scrolls horizontally
 
 **Substrates**: [Window](window.md)
+
+## `EVENT_BUTTONPRESS`
+Triggered when a Button widget is pressed
+
+**Substrates**: [Window](window.md)
+
+
+---
+
+
+# Event Callback Return Codes
+
+## `CALLBACK_NORMAL`
+Returns normal status. The event will propagate to the next callback.
+
+## `CALLBACK_EXIT`
+Immediately exits the mainloop.
+
+## `CALLBACK_DO_NOT_PROPAGATE`
+Stops the event from propagate to the next callback.
