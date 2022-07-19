@@ -18,23 +18,23 @@
 #ifdef LIBCEDAR_CHECK_VERSION
 
 #if LIBCEDAR_MAJOR != LIBCEDAR_TARGET_MAJOR
-#error "Expected libcedar major version " _LIBCEDAR_QUOTE(LIBCEDAR_TARGET_MAJOR) " but got " _LIBCEDAR_QUOTE(LIBCEDAR_MAJOR)
+#error Desired libcedar version is incompatible with installed version (major versions do not match)
 #endif  // major version
 
 #if LIBCEDAR_MINOR < LIBCEDAR_TARGET_MINOR
-#error "Expected libcedar minor version " _LIBCEDAR_QUOTE(LIBCEDAR_TARGET_MINOR) " but got " _LIBCEDAR_QUOTE(LIBCEDAR_MINOR)
+#error Desired libcedar version is newer than installed version (minor version out of date)
 #endif  // minor version
 
 #if defined(LIBCEDAR_VERSION_REQUIRE_SAME)
 
 #if (LIBCEDAR_MINOR != LIBCEDAR_TARGET_MINOR) || (LIBCEDAR_REVISION != LIBCEDAR_TARGET_REVISION)
-#error "Libcedar version " _LIBCEDAR_QUOTE(LIBCEDAR_MAJOR) "." _LIBCEDAR_QUOTE(LIBCEDAR_MINOR) "." _LIBCEDAR_QUOTE(LIBCEDAR_REVISION) " required but got version " LIBCEDAR_VERSION_STR
+#error Desired libcedar version is incompatible with installed version (installed version must be same)
 #endif
 
 #elif defined(LIBCEDAR_VERSION_REQUIRE_SAME_OR_BETTER)
 
 #if LIBCEDAR_REVISION < LIBCEDAR_TARGET_REVISION
-#error "Libcedar version better than revision " _LIBCEDAR_QUOTE(LIBCEDAR_REVISION) " required"
+#error Desired libcedar version is newer than installed version (installed version must be same or better)
 #endif
 
 #endif
