@@ -6,94 +6,73 @@ typedef struct Window Window;
 ```
 A window
 
-### `Widget *widgets.first`
-A pointer to the first widget in this window. If `NULL` there are no widgets in
-this window.
+
+### `CedarWidget *widgets.first`
+A pointer to the first widget in the window. If `NULL` then there are no widgets in this window.
 
 
-### `Widget *widgets.last`
-A pointer to the last widget in this window. If `NULL` there are no widgets in
-this window.
+## `CedarWidget *widgets.last`
+A pointer to the last widget in the window. If `NULL` then there are no widgets in this window.
 
 
-### `Widget *widgets.selected`
-A pointer to the currently selected widget. If `NULL` no widget is selected.
+### `CedarWidget *widgets.selected`
+A pointer to the currently selected widget. If `NULL` then no widget is selected.
 
 
-### `Menu *menu`
-A pointer to the menu for this window. If `NULL` then this window does not have
-a menu.
+### `CedarMenu *menu`
+A pointer to the menu for this window's menu bar. If `NULL` then this window does not have a menu bar.
 
 
-### `int realTop`
-The coordinate in the drawing buffer of the top of the main drawable area.
+### `gfx_region_t frame`
+The rectangle within virtual coordinate space that is currently visible in the window.
 
 
-### `int realLeft`
-The coordinate in the drawing buffer of the top of the main drawable area.
+### `gfx_point_t origin`
+A point in the drawing buffer that is mapped to (0,0) in virtual coordinate space.
 
 
-### `int projTop`
-The virtual Y coordinate at the top of the screen.
+### `enum scrollMode`
+Which method to use to scroll the window.
 
 
-### `int projLeft`
-The virtual X coordinate at the left of the screen.
+#### `WINDOW_SCROLL_PAGE`
+Scroll in chunks the size of the window frame.
 
 
-### `unsigned int width`
-The width of the window.
+#### `WINDOW_SCROLL_WIDGET`
+Scroll just enough to fit the currently selected widget.
 
 
-### `unsigned int height`
-The width of the window,
+### `bool repaint`
+When true, the menubar and all widgets are repainted.
 
 
-### `WindowEventHandler *handler`
-A pointer to a function to handle window events
+### `CedarEventHandler *handlers`
+The chain of event handlers to handle events dispatched to this window.
+
 
 ---
 
-### `WindowEventHandler`
-```c
-typedef uint24_t WindowEventHandler(Window *window, uint24_t event)
-```
-An event handler for a window
-
-**window** A pointer to the widget that triggered the event
-
-**event** The event that was triggered
-
-Returns an event return code indicating what the event dispatcher should do
-after the handler finishes handling the event.
-
----
-
-## `void cedar_initWindow(Window *window, WindowEventHandler *handler)`
+## `void cedar_InitWindow(Window *window)`
 Initializes a window.
 
 **window** The window to initialize
 
-**handler** A pointer to the handler for the window's events
 
-
-## `void cedar_destroyWindow(Window *window)`
+## `void cedar_DestroyWindow(Window *window)`
 Cleans up after a window
 
 **window** The window to clean up.
 
 
-## `uint24_t defaultWindowEventHandler(Window *window, int event)`
-The default window event handler
-
-
-## `int cedar_display(Window *window)`
+## `void cedar_Display(Window *window)`
 Displays a window. Starts a mainloop which dispatches events and paints the
 window.
 
 **window** The window to display
 
-Returns the event code that caused the mainloop to exit
+
+### `void cedar_RegisterEventHandler(component)
 
 
 ## `void cedar_addWidget(Window *window, Widget *widget)`
