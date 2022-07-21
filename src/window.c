@@ -282,10 +282,10 @@ void cedar_InitWindow(CedarWindow *window) {
 
 	window->menu = NULL;
 
-	window->frame.x = 0;
-	window->frame.y = 0;
-	window->frame.width = GFX_LCD_WIDTH;
-	window->frame.height = GFX_LCD_HEIGHT;
+	window->frame.xmin = 0;
+	window->frame.ymin = 0;
+	window->frame.xmax = GFX_LCD_WIDTH;
+	window->frame.ymax = GFX_LCD_HEIGHT;
 
 	window->origin.x = 0;
 	window->origin.y = 0;
@@ -537,49 +537,51 @@ void cedar_Display(CedarWindow *window) {
 			CedarWidget *selected = window->widgets.selected;
 			int delta = 0;
 
-			// FIXME: window coords get stuck equal to widget coords when scrolling left/up
-
-			if (selected->bounds.x < window->frame.x) {
+			if (selected->bounds.xmin < window->frame.xmin) {
 				// scroll left
 				switch (window->scrollMode) {
 					case WINDOW_SCROLL_WIDGET:
-						delta = selected->bounds.x - window->frame.x;
+						delta = selected->bounds.xmin - window->frame.xmin;
 						break;
 				}
 
-				window->frame.x += delta;
+				window->frame.xmin += delta;
+				window->frame.xmax += delta;
 				cedar_dispatchEvent(EVENT_HSCROLL, window, delta);
-			} else if (selected->bounds.x + selected->bounds.width > window->frame.x + window->frame.width) {
+			} else if (selected->bounds.xmax > window->frame.xmax) {
 				// scroll right
 				switch (window->scrollMode) {
 					case WINDOW_SCROLL_WIDGET:
-						delta = (selected->bounds.x + selected->bounds.width - window->frame.width) - window->frame.x;
+						delta = selected->bounds.xmax - window->frame.xmax;
 						break;
 				}
 
-				window->frame.x += delta;
+				window->frame.xmin += delta;
+				window->frame.xmax += delta;
 				cedar_dispatchEvent(EVENT_HSCROLL, window, delta);
 			}
 
-			if (selected->bounds.y < window->frame.y) {
+			if (selected->bounds.ymin < window->frame.ymin) {
 				// scroll up
 				switch (window->scrollMode) {
 					case WINDOW_SCROLL_WIDGET:
-						delta = selected->bounds.y - window->frame.y;
+						delta = selected->bounds.ymin - window->frame.ymin;
 						break;
 				}
 
-				window->frame.y += delta;
+				window->frame.ymin += delta;
+				window->frame.ymax += delta;
 				cedar_dispatchEvent(EVENT_VSCROLL, window, delta);
-			} else if (selected->bounds.y + selected->bounds.height > window->frame.y + window->frame.height) {
+			} else if (selected->bounds.ymax > window->frame.ymax) {
 				// scroll down
 				switch (window->scrollMode) {
 					case WINDOW_SCROLL_WIDGET:
-						delta = (selected->bounds.y + selected->bounds.height - window->frame.height) - window->frame.y;
+						delta = selected->bounds.ymax - window->frame.ymax;
 						break;
 				}
 
-				window->frame.y += delta;
+				window->frame.ymin += delta;
+				window->frame.ymax += delta;
 				cedar_dispatchEvent(EVENT_VSCROLL, window, delta);
 			}
 		}
@@ -600,7 +602,7 @@ void cedar_Display(CedarWindow *window) {
 		for (CedarWidget *widget=window->widgets.first; widget != NULL; widget = widget->next) {
 			if (widget->repaint || window->repaint) {
 				// translate widget's coordinates to a position in the drawing buffer
-				CedarRect bufferRegion = {
+				/*CedarRect bufferRegion = {
 					.x = (widget->bounds.x + window->origin.x) - window->frame.x,
 					.y = (widget->bounds.y + window->origin.y) - window->frame.y,
 					.width = widget->bounds.width,
@@ -609,51 +611,33 @@ void cedar_Display(CedarWindow *window) {
 				CedarPoint realPos = {
 					.x = bufferRegion.x,
 					.y = bufferRegion.y
-				};
+				};*/
 				bool onscreen = true;
 
-				if (bufferRegion.x < window->frame.x) {
-					// left side is off screen to the left
-					bufferRegion.x = 0;
-				} else if (bufferRegion.x > window->frame.x + window->frame.width) {
-					// left side is off screen to the right
-					onscreen = false;
-				}
-
-				if (bufferRegion.x + bufferRegion.width > window->frame.x + window->frame.width) {
-					// right side is off screen to the right
-					bufferRegion.width = window->frame.width - bufferRegion.x;
-				} else if (bufferRegion.x + bufferRegion.width < window->frame.x) {
-					// right side is off screen to the left
-					onscreen = false;
-				}
-
-				if (bufferRegion.y < window->frame.y) {
-					// top side is above top of the screen
-					bufferRegion.y = 0;
-				} else if (bufferRegion.y > window->frame.y + window->frame.height) {
-					// top side is below bottom of the screen
-					onscreen = false;
-				}
-
-				if (bufferRegion.y + bufferRegion.height > window->frame.y + window->frame.height) {
-					// bottom side is below the bottom of the screen
-					bufferRegion.height = window->frame.height - bufferRegion.y;
-				} else if (bufferRegion.y + bufferRegion.height < window->frame.y) {
-					// bottom side is above the top of the screen
+				if (widget->bounds.xmin > window->frame.xmax
+				 || widget->bounds.xmax < window->frame.xmin
+				 || widget->bounds.ymin > window->frame.ymax
+				 || widget->bounds.ymax < window->frame.ymin) {
 					onscreen = false;
 				}
 
 				if (onscreen) {
-					// Widget is fully visible
-					clearRect(bufferRegion.x, bufferRegion.y, bufferRegion.width, bufferRegion.height);
+					gfx_region_t realWidgetPos = {
+						.xmin = widget->bounds.xmin - window->frame.xmin + window->origin.x,
+						.ymin = widget->bounds.ymin - window->frame.ymin + window->origin.y,
+						.xmax = widget->bounds.xmax - window->frame.xmin + window->origin.x,
+						.ymax = widget->bounds.ymax - window->frame.ymin + window->origin.y
+					};
 
-					callbackReturnCode = cedar_dispatchEvent(EVENT_PAINT, widget, (uint24_t)&realPos);
+					// Widget is fully visible
+					clearRect(realWidgetPos.xmin, realWidgetPos.ymin, GFX_REGION_WIDTH(realWidgetPos), GFX_REGION_HEIGHT(realWidgetPos));
+
+					callbackReturnCode = cedar_dispatchEvent(EVENT_PAINT, widget, (uint24_t)&realWidgetPos);
 					// return code is checked after blitting
 
 					if (!window->repaint) {
 						// only blit if we're not going to blit everything later
-						gfx_BlitRectangle(gfx_buffer, bufferRegion.x, bufferRegion.y, bufferRegion.width, bufferRegion.height);
+						gfx_BlitRectangle(gfx_buffer, realWidgetPos.xmin, realWidgetPos.ymin, GFX_REGION_WIDTH(realWidgetPos), GFX_REGION_HEIGHT(realWidgetPos));
 					}
 					widget->repaint = false;  // repaint finished
 
@@ -671,7 +655,7 @@ void cedar_Display(CedarWindow *window) {
 		if (window->menu != NULL) {
 			unsigned int menuBarPaintOffset = 5;
 
-			clearRect(0, 0, window->frame.width, MENUBAR_HEIGHT);
+			clearRect(0, 0, GFX_REGION_WIDTH(window->frame), MENUBAR_HEIGHT);
 
 			for (CedarMenuItem *current=window->menu->first; current != NULL; current = current->next) {
 				if (isMenuItemSeparator(current)) {
@@ -681,7 +665,7 @@ void cedar_Display(CedarWindow *window) {
 				} else {
 					unsigned int labelWidth = gfx_GetStringWidth(current->label);
 
-					if (menuBarPaintOffset + labelWidth > window->frame.width) {
+					if (menuBarPaintOffset + labelWidth > GFX_REGION_WIDTH(window->frame)) {
 						// no more room to paint
 						// TODO: allow menu to scroll
 						break;
@@ -706,7 +690,7 @@ void cedar_Display(CedarWindow *window) {
 				}
 			}
 
-			gfx_HorizLine_NoClip(0, MENUBAR_HEIGHT, window->frame.width);
+			gfx_HorizLine_NoClip(0, MENUBAR_HEIGHT, GFX_REGION_WIDTH(window->frame));
 
 			paintActiveSubmenus(window->menu);
 		}

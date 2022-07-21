@@ -54,39 +54,9 @@ extern "C" {
 #include "cedar/defs.h"
 
 // TODO: make it easier to traverse parent/child relationships
-// TODO: switch to gfx_point_t and gfx_region_t
 
-/*
- * A point
- *
- * x	The x coordinate of the point
- * y	The y coordinate of the point
- */
-struct CedarPoint {
-	int x;
-	int y;
-};
-
-/*
- * A rectangle
- *
- * x		The x coordinate of the left side of the rectangle
- * y		The y coordinate of the top side of the rectangle
- * width	The width of the rectangle
- * height	The height of the rectangle
- */
-struct CedarRect {
-	int x;
-	int y;
-	int width;
-	int height;
-};
-
-#define cedar_rectIsAInsideB(a, b)\
-	(a.x >= b.x\
-	&& (a.x + a.width) <= (b.x + b.width)\
-	&& (a.y >= b.y)\
-	&& (a.y + a.height) <= (b.y + b.height))
+#define GFX_REGION_WIDTH(r)		((r).xmax - (r).xmin)
+#define GFX_REGION_HEIGHT(r)	((r).ymax - (r).ymin)
 
 /*
  * A singly linked list of event handlers
@@ -122,8 +92,8 @@ struct CedarWindow {
 
 	CedarMenu *menu;
 
-	CedarRect frame;
-	CedarPoint origin;
+	gfx_region_t frame;
+	gfx_point_t origin;
 
 	enum {
 		WINDOW_SCROLL_PAGE,
@@ -158,7 +128,7 @@ struct CedarWidget {
 	CedarWidget *prev;
 	CedarWidget *next;
 
-	CedarRect bounds;
+	gfx_region_t bounds;
 
 	bool repaint;
 	bool enabled;

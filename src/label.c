@@ -16,8 +16,8 @@ CALLBACKRESULT defaultLabelHandler(CedarWidget *self, EVENT event, uint24_t para
 		case EVENT_PAINT:
 			// Paint widget
 		{
-			CedarPoint *pos = (CedarPoint *)param;
-			cedar_wrapTextInBox(((LabelData *)self->data)->text, pos->x, pos->y, self->bounds.width, self->bounds.height);
+			gfx_region_t *pos = (gfx_region_t *)param;
+			cedar_wrapTextInBox(((LabelData *)self->data)->text, pos->xmin, pos->ymin, GFX_REGION_WIDTH(*pos), GFX_REGION_HEIGHT(*pos));
 		}
 	}
 
@@ -34,10 +34,10 @@ CedarWidget *CedarLabel(ID id, int x, int y, int width, int height, const char *
 	widget->next = NULL;
 	widget->prev = NULL;
 
-	widget->bounds.x = x;
-	widget->bounds.y = y;
-	widget->bounds.width = width;
-	widget->bounds.height = height;
+	widget->bounds.xmin = x;
+	widget->bounds.ymin = y;
+	widget->bounds.xmax = x + width;
+	widget->bounds.ymax = y + height;
 
 	widget->repaint = true;
 

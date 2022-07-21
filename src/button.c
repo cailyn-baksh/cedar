@@ -16,25 +16,25 @@ CALLBACKRESULT defaultButtonHandler(CedarWidget *self, EVENT event, uint24_t par
 		case EVENT_PAINT:
 			// Paint widget
 		{
-			CedarPoint *pos = (CedarPoint *)param;
+			gfx_region_t *pos = (gfx_region_t *)param;
 
 			if (((ButtonData *)self->data)->focused) {
 				// Draw focused
-				gfx_FillRectangle(pos->x, pos->y, self->bounds.width, self->bounds.height);
+				gfx_FillRectangle(pos->xmin, pos->ymin, GFX_REGION_WIDTH(*pos), GFX_REGION_HEIGHT(*pos));
 
 				gfx_SetTextFGColor(255);
 				gfx_SetTextBGColor(0);
 				gfx_SetTextTransparentColor(0);
 
-				cedar_wrapTextInBox(((ButtonData *)self->data)->text, pos->x+2, pos->y+2, self->bounds.width-2, self->bounds.height-2);
+				cedar_wrapTextInBox(((ButtonData *)self->data)->text, pos->xmin+2, pos->ymin+2, GFX_REGION_WIDTH(*pos)-2, GFX_REGION_HEIGHT(*pos)-2);
 
-				gfx_SetTextFGColor(0);
+				gfx_SetTextFGColor(1);
 				gfx_SetTextBGColor(255);
 				gfx_SetTextTransparentColor(255);
 			} else {
 				// Draw unfocused
-				gfx_Rectangle(pos->x, pos->y, self->bounds.width, self->bounds.height);
-				cedar_wrapTextInBox(((ButtonData *)self->data)->text, pos->x+2, pos->y+2, self->bounds.width-2, self->bounds.height-2);
+				gfx_Rectangle(pos->xmin, pos->ymin, GFX_REGION_WIDTH(*pos), GFX_REGION_HEIGHT(*pos));
+				cedar_wrapTextInBox(((ButtonData *)self->data)->text, pos->xmin+2, pos->ymin+2, GFX_REGION_WIDTH(*pos)-2, GFX_REGION_HEIGHT(*pos)-2);
 			}
 		}
 			break;
@@ -65,10 +65,10 @@ CedarWidget *CedarButton(ID id, int x, int y, int width, int height, const char 
 	widget->prev = NULL;
 	widget->next = NULL;
 
-	widget->bounds.x = x;
-	widget->bounds.y = y;
-	widget->bounds.width = width;
-	widget->bounds.height = height;
+	widget->bounds.xmin = x;
+	widget->bounds.ymin = y;
+	widget->bounds.xmax = x + width;
+	widget->bounds.ymax = y + height;
 
 	widget->repaint = true;
 	widget->enabled = true;

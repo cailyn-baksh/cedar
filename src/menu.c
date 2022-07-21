@@ -7,7 +7,7 @@ void cedar_SetMenu(CedarWindow *window, CedarMenu *menu) {
 	DBGPRINT("Setting menu of window at %p to menu at %p\n", window, menu);
 
 	window->menu = menu;
-	window->frame.height -= MENUBAR_HEIGHT;
+	window->frame.ymax -= MENUBAR_HEIGHT;
 	window->origin.y += MENUBAR_HEIGHT;
 }
 
