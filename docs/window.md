@@ -53,29 +53,46 @@ The chain of event handlers to handle events dispatched to this window.
 
 ---
 
-## `void cedar_InitWindow(Window *window)`
+## `void cedar_InitWindow(CedarWindow *window)`
 Initializes a window.
 
 **window** The window to initialize
 
 
-## `void cedar_DestroyWindow(Window *window)`
+## `void cedar_DestroyWindow(CedarWindow *window)`
 Cleans up after a window
 
 **window** The window to clean up.
 
 
-## `void cedar_Display(Window *window)`
+## `void cedar_Display(CedarWindow *window)`
 Displays a window. Starts a mainloop which dispatches events and paints the
 window.
 
 **window** The window to display
 
 
-### `void cedar_RegisterEventHandler(component)
+## `void cedar_RegisterEventHandler(CedarEventHandler *handlerStack, CedarEventHandlerCallback *callback)`
+Register a new event handler.
+
+**handlerStack** The handler stack to push this handler onto
+
+**callback** The callback to push onto the handler stack
 
 
-## `void cedar_addWidget(Window *window, Widget *widget)`
+## `cedar_dispatchEvent(event, component, param)`
+Dispatch `event` to `component`. `component` must be a pointer type with a `handlers` member.
+
+**event** The event to dispatch
+
+**component** The component to dispatch the event to
+
+**param** The parameter associated with the event
+
+Returns a `CALLBACKRESULT` indicating the result of the event handlers
+
+
+## `void cedar_AddWidget(CedarWindow *window, CedarWidget *widget)`
 Adds a widget to a window.
 
 **window** The window to add the widget to
@@ -83,7 +100,7 @@ Adds a widget to a window.
 **widget** The widget to add to the window
 
 
-## `void cedar_setMenu(Window *window, Menu *menu)`
+## `void cedar_SetMenu(CedarWindow *window, CedarMenu *menu)`
 Set the menu for a window
 
 **window** The window to add the menu to

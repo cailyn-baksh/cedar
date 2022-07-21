@@ -82,7 +82,9 @@ Adds a separator to a menu
 Adds an item to a menu.
 
 **menu** The menu to add the item to
+
 **id** The ID of the menu item
+
 **label** A label for the menu item. This is truncated to 12 characters.
 
 
@@ -90,8 +92,11 @@ Adds an item to a menu.
 Adds a submenu to a menu.
 
 **parent** The parent menu to add this child menu to
+
 **id** The ID of the menu item
+
 **label** A label for the menu item. This is truncated to 12 characters.
+
 **child** The child menu to add to the parent menu.
 
 

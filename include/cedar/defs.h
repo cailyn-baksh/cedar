@@ -56,8 +56,8 @@ typedef CALLBACKRESULT CedarEventHandlerCallback(void *self, EVENT event, uint24
 #define ID_ANONYMOUS			((ID)0)
 
 // keys
-#define CEDAR_2NDFLAG		(0b01 << 16)
-#define CEDAR_ALPHAFLAG		(0b10 << 16)
+#define CEDAR_2NDFLAG		(1 << 16)
+#define CEDAR_ALPHAFLAG		(1 << 17)
 
 #define CEDAR_KB_GRAPH		((uint24_t)kb_KeyGraph)
 #define CEDAR_KB_TRACE		((uint24_t)kb_KeyTrace)
@@ -194,11 +194,14 @@ typedef CALLBACKRESULT CedarEventHandlerCallback(void *self, EVENT event, uint24
 #define CEDAR_KB_SOLVE		((uint24_t)(CEDAR_ALPHAFLAG | kb_KeyEnter))
 
 // 83 Premium CE keys
-#define CEDAR_KB_FENETRE	((uint24_t)kb_KeyFenetre)
-#define CEDAR_KB_FX			((uint24_t)kb_KeyFx)
-#define CEDAR_KB_SUPPR		((uint24_t)kb_KeySuppr)
-#define CEDAR_KB_TGLEXACT	((uint24_t)kb_KeyTglExact)
-#define CEDAR_KB_TRIG		((uint24_t)kb_KeyTrig)
-#define CEDAR_KB_MATRICE	((uint24_t)kb_KeyMatrice)
+#define CEDAR_KB_FENETRE	CEDAR_KB_WINDOW
+#define CEDAR_KB_FX			CEDAR_KB_YEQU
+#define CEDAR_KB_SUPPR		CEDAR_KB_DEL
+#define CEDAR_KB_TGLEXACT	CEDAR_KB_RECIP
+#define CEDAR_KB_TRIG		CEDAR_KB_SIN
+#define CEDAR_KB_MATRICE	CEDAR_KB_APPS
+#define CEDAR_KB_RESOL		CEDAR_KB_COS
+#define CEDAR_KB_FRAC		CEDAR_KB_TAN
+#define CEDAR_KB_ANNUL		CEDAR_KB_CLEAR
 
 #endif  // _LIBCEDAR_DEFS_H_

@@ -7,63 +7,44 @@ typedef struct Widget Widget;
 A Widget.
 
 
-### `WidgetType type`
-The type of the widget
-
-
-### `uint24_t id`
-The ID of the widget.
+### `ID id`
+The ID of this widget
 
 
 ### `uint24_t attrs`
 Attributes of the widget.
 
 
-### `Widget *prev`
-A pointer to the previous widget. `NULL` if this is the first widget.
+### `CedarWindow *parent`
+A pointer to the window that contains this widget.
 
 
-### `Widget *next`
-A pointer to the next widget. `NULL if this is the last widget.
+### `CedarWidget *prev`
+A pointer to the previous widget. If `NULL` then this is the first widget.
 
 
-### `int x`
-The virtual x coordinate of this widget.
+### `CedarWidget *next`
+A pointer to the next widget. If `NULL` then this is the last widget.
 
 
-### `int y`
-The virtual y coordinate of this widget.
+### `gfx_region_t bounds`
+The rectangle that contains this widget in virtual coordinate space.
 
 
-### `unsigned int width`
-The width of this widget in pixels.
-
-
-### `unsigned int height`
-The height of this widget in pixels.
-
-
-### `int realX`
-The "real" x coordinate on the screen of this widget. This value is undefined
-except during a paint event.
-
-
-### `int realY`
-The "real" y coordinate on the screen of this widget. This value is undefined
-except during a paint event.
+### `bool repaint`
+If `true`, this widget will be repainted if it is visible.
 
 
 ### `bool enabled`
-If true, this widget can be interacted with. 
+If `true`, this widget is enabled.
 
 
-### `void *data`
-A pointer to data for this widget. This is used to store widget-specific data
-for derived widgets.
+### `CedarEventHandler *handlers`
+The chain of event handlers to handle events dispatched to this window.
 
 
-### `WidgetEventHandler *handler`
-A handler called when the widget recieves an event.
+### `uint8_t data[]`
+Flexible array member used by widget implementations to store widget-specific data.
 
 ---
 
@@ -71,25 +52,12 @@ A handler called when the widget recieves an event.
 Helper macro to access a widget's data member and cast it to a particular type.
 
 
-### `cedar_destroyWidget(Widget *widget)`
+### `cedar_DestroyWidget(Widget *widget)`
 Frees a widget's memory. The previous and next widgets will be linked to each
 other.
 
 **widget** The widget to clean up.
 
-
-### `WidgetEventHandler`
-```c
-typedef uint24_t WidgetEventHandler(Widget *widget, uint24_t event);
-```
-An event handler for a widget
-
-**widget** A pointer to the widget that triggered the event
-
-**event** The event that was triggered
-
-Returns an event return code indicating what the event dispatcher should do
-after the handler finishes handling the event.
 
 ---
 
@@ -98,7 +66,7 @@ Labels are a widget that contain text
 
 
 ### `LabelData`
-Label data. In label widgets, `data` points to an instance of this structure.
+Label data. In label widgets, `data` is an instance of this struct.
 
 
 #### `char *text`
@@ -120,18 +88,14 @@ Creates a label widget. A label is a widget which contains text.
 
 Returns a new Label widget
 
-
-### `uint24_t defaultLabelHandler(Widget *widget, uint24_t event)`
-The default event handler for label widgets.
-
 ---
 
 ## Buttons
-Buttons are widgets which can be selected to trigger events
+Buttons are widgets which can be selected to trigger events.
 
 
 ### `ButtonData`
-Button data. In button widgets, `data` points to an instance of this structure.
+Button data. In button widgets, `data` is an instance of this structure.
 
 
 #### `char *text`
@@ -142,7 +106,7 @@ The text of the button.
 Whether or not the button is focused
 
 
-### `Widget *Button(int x, int y, int width, int height, const char *text)
+### `Widget *Button(int x, int y, int width, int height, const char *text)`
 Creates a button widget.
 
 **x** The X coordinate of the left side of the button
@@ -156,7 +120,3 @@ Creates a button widget.
 **text** The content of the label
 
 Returns a new Button widget
-
-
-### `uint24_t defaultButtonhandler(Widget *widget, uint24_t event)`
-The default event handler for button widgets
