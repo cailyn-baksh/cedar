@@ -1,20 +1,12 @@
 #include "cedar.h"
 
-// should these be turned into a macro?
-void _cedar_RegisterWindowEventHandler(CedarWindow *window, CedarEventHandlerCallback callback) {
-	CedarEventHandler *oldHandler = window->handlers;
+void cedar_RegisterEventHandler(CedarEventHandler *handlerStack, CedarEventHandlerCallback *callback) {
+	CedarEventHandler *nextHandler = malloc(sizeof(CedarEventHandler));
+	nextHandler->callback = handlerStack->callback;
+	nextHandler->next = handlerStack->next;
 
-	window->handlers = malloc(sizeof(CedarEventHandler));
-	window->handlers->callback = callback;
-	window->handlers->next = oldHandler;
-}
-
-void _cedar_RegisterWidgetEventHandler(CedarWidget *widget, CedarEventHandlerCallback callback) {
-	CedarEventHandler *oldHandler = widget->handlers;
-
-	widget->handlers = malloc(sizeof(CedarEventHandler));
-	widget->handlers->callback = callback;
-	widget->handlers->next = oldHandler;
+	handlerStack->callback = callback;
+	handlerStack->next = nextHandler;
 }
 
 CALLBACKRESULT _cedar_dispatchEvent(CedarEventHandler *firstHandler, void *self, EVENT event, uint24_t param) {

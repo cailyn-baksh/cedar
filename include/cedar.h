@@ -69,6 +69,8 @@ struct CedarEventHandler {
 	CedarEventHandler *next;
 };
 
+//struct CedarEventHandlerChain
+
 /*
  * A window.
  *
@@ -224,18 +226,13 @@ void cedar_DestroyWindow(CedarWindow *window);
  */
 void cedar_Display(CedarWindow *window);
 
-void _cedar_RegisterWindowEventHandler(CedarWindow *window, CedarEventHandlerCallback callback);
-void _cedar_RegisterWidgetEventHandler(CedarWidget *widget, CedarEventHandlerCallback callback);
-
 /*
- * Registers an event handler for a component.
+ * Register a new event handler.
  *
- * component	The component to register the handler to
- * handler		The handler to register
+ * handlerStack	The handler stack to push this handler onto
+ * callback		The callback to push onto the handler stack
  */
-#define cedar_RegisterEventHandler(component, callback) _Generic((component),\
-	CedarWindow *: _cedar_RegisterWindowEventHandler(component, callback),\
-	CedarWidget *: _cedar_RegisterWidgetEventHandler(component, callback))
+void cedar_RegisterEventHandler(CedarEventHandler *handlerStack, CedarEventHandlerCallback *callback);
 
 CALLBACKRESULT _cedar_dispatchEvent(CedarEventHandler *firstHandler, void *self, EVENT event, uint24_t param);
 

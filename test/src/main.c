@@ -65,7 +65,7 @@ int main() {
 	cedar_AddWidget(&window, CedarButton(BUTTON_BUTTON, 40, 180, 60, 20, "Button!"));
 	cedar_AddWidget(&window, CedarButton(BUTTON_OFFSCREEN, 420, 80, 50, 20, "btn2"));
 
-	cedar_RegisterEventHandler(&window, mainWindowEventHandler);
+	cedar_RegisterEventHandler(window.handlers, mainWindowEventHandler);
 
 	cedar_Display(&window);
 
