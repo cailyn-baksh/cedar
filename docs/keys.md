@@ -24,7 +24,7 @@ The predefined keycodes are listed below:
 | `CEDAR_KB_ZOOM`     | <span class="key light">zoom</span>               |
 | `CEDAR_KB_WINDOW`   | <span class="key light">window</span>             |
 | `CEDAR_KB_YEQU`     | <span class="key light">y=</span>                 |
-| `CEDAR_KB_2ND`      | <span class="key 2nd">2nd</span>                  |
+| `CEDAR_KB_2ND`      | <span class="key _2nd">2nd</span>                 |
 | `CEDAR_KB_MODE`     | <span class="key dark">mode</span>                |
 | `CEDAR_KB_DEL`      | <span class="key dark">del</span>                 |
 | `CEDAR_KB_STO`      | <span class="key dark">sto&rarr;</span>           |
@@ -59,10 +59,10 @@ The predefined keycodes are listed below:
 | `CEDAR_KB_CHS`      | <span class="key light">(-)</span>                |
 | `CEDAR_KB_VARS`     | <span class="key dark">vars</span>                |
 | `CEDAR_KB_ENTER`    | <span class="key light">enter</span>              |
-| `CEDAR_KB_ADD`      | <span class="key light">&plus;</span>             |
-| `CEDAR_KB_SUB`      | <span class="key light">&minus;</span>              |
+| `CEDAR_KB_ADD`      | <span class="key light">+</span>                  |
+| `CEDAR_KB_SUB`      | <span class="key light">&minus;</span>            |
 | `CEDAR_KB_MUL`      | <span class="key light">&times;</span>            |
-| `CEDAR_KB_DIV`      | <span class="key light">&div;</span>              |
+| `CEDAR_KB_DIV`      | <span class="key light">&divide;</span>           |
 | `CEDAR_KB_POWER`    | <span class="key dark">^</span>                   |
 | `CEDAR_KB_CLEAR`    | <span class="key dark">clear</span>               |
 | `CEDAR_KB_DOWN`     | <span class="key light">&#x2BC6;</span>           |
@@ -70,52 +70,52 @@ The predefined keycodes are listed below:
 | `CEDAR_KB_RIGHT`    | <span class="key light">&#x2BC8;</span>           |
 | `CEDAR_KB_UP`       | <span class="key light">&#x2BC5;</span>           |
 
-| Name                | Key                                                                                                                              |
-|---------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| `CEDAR_KB_STATPLOT` | <span class="2ndtext">stat plot</span> / <span class="key 2nd">2nd</span> + <span class="key light">y=</span>                    |
-| `CEDAR_KB_TBLSET`   | <span class="2ndtext">tblset</span> / <span class="key 2nd">2nd</span> + <span class="key light">window</span>                   |
-| `CEDAR_KB_FORMAT`   | <span class="2ndtext">format</span> / <span class="key 2nd">2nd</span> + <span class="key light">zoom</span>                     |
-| `CEDAR_KB_CALC`     | <span class="2ndtext">calc</span> / <span class="key 2nd">2nd</span> + <span class="key light">trace</span>                      |
-| `CEDAR_KB_TABLE`    | <span class="2ndtext">table</span> / <span class="key 2nd">2nd</span> + <span class="key light">graph</span>                     |
-| `CEDAR_KB_QUIT`     | <span class="2ndtext">quit</span> / <span class="key 2nd">2nd</span> + <span class="key dark">mode</span>                        |
-| `CEDAR_KB_INS`      | <span class="2ndtext">ins</span> / <span class="key 2nd">2nd</span> + <span class="key dark">del</span>                          |
-| `CEDAR_KB_LINK`     | <span class="2ndtext">link</span> / <span class="key 2nd">2nd</span> + <span class="key dark">x,&#7451;,&theta;,n</span>         |
-| `CEDAR_KB_LIST`     | <span class="2ndtext">list</span> / <span class="key 2nd">2nd</span> + <span class="key dark">stat</span>                        |
-| `CEDAR_KB_TEST`     | <span class="2ndtext">test</span> / <span class="key 2nd">2nd</span> + <span class="key dark">math</span>                        |
-| `CEDAR_KB_ANGLE`    | <span class="2ndtext">angle</span> / <span class="key 2nd">2nd</span> + <span class="key dark">apps</span>                       |
-| `CEDAR_KB_DRAW`     | <span class="2ndtext">draw</span> / <span class="key 2nd">2nd</span> + <span class="key dark">prgm</span>                        |
-| `CEDAR_KB_DISTR`    | <span class="2ndtext">distr</span> / <span class="key 2nd">2nd</span> + <span class="key dark">vars</span>                       |
-| `CEDAR_KB_MATRIX`   | <span class="2ndtext">matrix</span> / <span class="key 2nd">2nd</span> + <span class="key dark">x<sup>-1</sup></span>            |
-| `CEDAR_KB_ARCSIN`   | <span class="2ndtext">sin<sup>-1</sup></span> / <span class="key 2nd">2nd</span> + <span class="key dark">sin</span>             |
-| `CEDAR_KB_ARCCOS`   | <span class="2ndtext">cos<sup>-1</sup></span> / <span class="key 2nd">2nd</span> + <span class="key dark">cos</span>             |
-| `CEDAR_KB_ARCTAN`   | <span class="2ndtext">tan<sup>-1</sup></span> / <span class="key 2nd">2nd</span> + <span class="key dark">tan</span>             |
-| `CEDAR_KB_PI`       | <span class="2ndtext">&pi;</span> / <span class="key 2nd">2nd</span> + <span class="key dark">^</span>                           |
-| `CEDAR_KB_SQRT`     | <span class="2ndtext">&#8730;</span> / <span class="key 2nd">2nd</span> + <span class="key dark">x<sup>2</sup></span>            |
-| `CEDAR_KB_EE`       | <span class="2ndtext">EE</span> / <span class="key 2nd">2nd</span> + <span class="key dark">,</span>                             |
-| `CEDAR_KB_LCURLY`   | <span class="2ndtext">{</span> / <span class="key 2nd">2nd</span> + <span class="key dark">(</span>                              |
-| `CEDAR_KB_RCURLY`   | <span class="2ndtext">}</span> / <span class="key 2nd">2nd</span> + <span class="key dark">)</span>                              |
-| `CEDAR_KB_EULER`    | <span class="2ndtext">e</span> / <span class="key 2nd">2nd</span> + <span class="key light">&div;</span>                         |
-| `CEDAR_KB_POW10`    | <span class="2ndtext">10<sup>x</sup></span> / <span class="key 2nd">2nd</span> + <span class="key dark">log</span>               |
-| `CEDAR_KB_u`        | <span class="2ndtext">u</span> / <span class="key 2nd">2nd</span> + <span class="key light">7</span>                             |
-| `CEDAR_KB_v`        | <span class="2ndtext">v</span> / <span class="key 2nd">2nd</span> + <span class="key light">8</span>                             |
-| `CEDAR_KB_w`        | <span class="2ndtext">w</span> / <span class="key 2nd">2nd</span> + <span class="key light">9</span>                             |
-| `CEDAR_KB_LSQUARE`  | <span class="2ndtext">[</span> / <span class="key 2nd">2nd</span> + <span class="key light">&times;</span>                       |
-| `CEDAR_KB_RSQUARE`  | <span class="2ndtext">]</span> / <span class="key 2nd">2nd</span> + <span class="key light">&minus;</span>                       |
-| `CEDAR_KB_POWE`     | <span class="2ndtext">e<sup>x</sup></span> / <span class="key 2nd">2nd</span> + <span class="key dark">ln</span>                 |
-| `CEDAR_KB_L1`       | <span class="2ndtext">L1</span> / <span class="key 2nd">2nd</span> + <span class="key light">1</span>                            |
-| `CEDAR_KB_L2`       | <span class="2ndtext">L2</span> / <span class="key 2nd">2nd</span> + <span class="key light">2</span>                            |
-| `CEDAR_KB_L3`       | <span class="2ndtext">L3</span> / <span class="key 2nd">2nd</span> + <span class="key light">3</span>                            |
-| `CEDAR_KB_L4`       | <span class="2ndtext">L4</span> / <span class="key 2nd">2nd</span> + <span class="key light">4</span>                            |
-| `CEDAR_KB_L5`       | <span class="2ndtext">L5</span> / <span class="key 2nd">2nd</span> + <span class="key light">5</span>                            |
-| `CEDAR_KB_L6`       | <span class="2ndtext">L6</span> / <span class="key 2nd">2nd</span> + <span class="key light">6</span>                            |
-| `CEDAR_KB_RCL`      | <span class="2ndtext">rcl</span> / <span class="key 2nd">2nd</span> + <span class="key dark">sto&rarr;</span>                    |
-| `CEDAR_KB_MEM`      | <span class="2ndtext">mem</span> / <span class="key 2nd">2nd</span> + <span class="key light">&plus;</span>                      |
-| `CEDAR_KB_CATALOG`  | <span class="2ndtext">catalog</span> / <span class="key 2nd">2nd</span> + <span class="key light">0</span>                       |
-| `CEDAR_KB_IMAG`     | <span class="2ndtext"><i>i</i></span> / <span class="key 2nd">2nd</span> + <span class="key light">.</span>                      |
-| `CEDAR_KB_ANS`      | <span class="2ndtext">ans</span> / <span class="key 2nd">2nd</span> + <span class="key light">(-)</span>                         |
-| `CEDAR_KB_ENTRY`    | <span class="2ndtext">entry</span> / <span class="key 2nd">2nd</span> + <span class="key light">enter</span>                     |
-| `CEDAR_KB_BRIGHTEN` | <span class="2ndtext">&#9788;</span> / <span class="key 2nd">2nd</span> + <span class="key light">&#x2BC5;</span>                |
-| `CEDAR_KB_DARKEN`   | <span class="2ndtext"><small>&#9788;</small></span> / <span class="key 2nd">2nd</span> + <span class="key light">&#x2BC5;</span> |
+| Name                | Key                                                                                                                            |
+|---------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `CEDAR_KB_STATPLOT` | <span class="_2nd">stat plot</span> / <span class="key _2nd">2nd</span> + <span class="key light">y=</span>                    |
+| `CEDAR_KB_TBLSET`   | <span class="_2nd">tblset</span> / <span class="key _2nd">2nd</span> + <span class="key light">window</span>                   |
+| `CEDAR_KB_FORMAT`   | <span class="_2nd">format</span> / <span class="key _2nd">2nd</span> + <span class="key light">zoom</span>                     |
+| `CEDAR_KB_CALC`     | <span class="_2nd">calc</span> / <span class="key _2nd">2nd</span> + <span class="key light">trace</span>                      |
+| `CEDAR_KB_TABLE`    | <span class="_2nd">table</span> / <span class="key _2nd">2nd</span> + <span class="key light">graph</span>                     |
+| `CEDAR_KB_QUIT`     | <span class="_2nd">quit</span> / <span class="key _2nd">2nd</span> + <span class="key dark">mode</span>                        |
+| `CEDAR_KB_INS`      | <span class="_2nd">ins</span> / <span class="key _2nd">2nd</span> + <span class="key dark">del</span>                          |
+| `CEDAR_KB_LINK`     | <span class="_2nd">link</span> / <span class="key _2nd">2nd</span> + <span class="key dark">x,&#7451;,&theta;,n</span>         |
+| `CEDAR_KB_LIST`     | <span class="_2nd">list</span> / <span class="key _2nd">2nd</span> + <span class="key dark">stat</span>                        |
+| `CEDAR_KB_TEST`     | <span class="_2nd">test</span> / <span class="key _2nd">2nd</span> + <span class="key dark">math</span>                        |
+| `CEDAR_KB_ANGLE`    | <span class="_2nd">angle</span> / <span class="key _2nd">2nd</span> + <span class="key dark">apps</span>                       |
+| `CEDAR_KB_DRAW`     | <span class="_2nd">draw</span> / <span class="key _2nd">2nd</span> + <span class="key dark">prgm</span>                        |
+| `CEDAR_KB_DISTR`    | <span class="_2nd">distr</span> / <span class="key _2nd">2nd</span> + <span class="key dark">vars</span>                       |
+| `CEDAR_KB_MATRIX`   | <span class="_2nd">matrix</span> / <span class="key _2nd">2nd</span> + <span class="key dark">x<sup>-1</sup></span>            |
+| `CEDAR_KB_ARCSIN`   | <span class="_2nd">sin<sup>-1</sup></span> / <span class="key _2nd">2nd</span> + <span class="key dark">sin</span>             |
+| `CEDAR_KB_ARCCOS`   | <span class="_2nd">cos<sup>-1</sup></span> / <span class="key _2nd">2nd</span> + <span class="key dark">cos</span>             |
+| `CEDAR_KB_ARCTAN`   | <span class="_2nd">tan<sup>-1</sup></span> / <span class="key _2nd">2nd</span> + <span class="key dark">tan</span>             |
+| `CEDAR_KB_PI`       | <span class="_2nd">&pi;</span> / <span class="key _2nd">2nd</span> + <span class="key dark">^</span>                           |
+| `CEDAR_KB_SQRT`     | <span class="_2nd">&#8730;</span> / <span class="key _2nd">2nd</span> + <span class="key dark">x<sup>2</sup></span>            |
+| `CEDAR_KB_EE`       | <span class="_2nd">EE</span> / <span class="key _2nd">2nd</span> + <span class="key dark">,</span>                             |
+| `CEDAR_KB_LCURLY`   | <span class="_2nd">{</span> / <span class="key _2nd">2nd</span> + <span class="key dark">(</span>                              |
+| `CEDAR_KB_RCURLY`   | <span class="_2nd">}</span> / <span class="key _2nd">2nd</span> + <span class="key dark">)</span>                              |
+| `CEDAR_KB_EULER`    | <span class="_2nd">e</span> / <span class="key _2nd">2nd</span> + <span class="key light">&divide;</span>                      |
+| `CEDAR_KB_POW10`    | <span class="_2nd">10<sup>x</sup></span> / <span class="key _2nd">2nd</span> + <span class="key dark">log</span>               |
+| `CEDAR_KB_u`        | <span class="_2nd">u</span> / <span class="key _2nd">2nd</span> + <span class="key light">7</span>                             |
+| `CEDAR_KB_v`        | <span class="_2nd">v</span> / <span class="key _2nd">2nd</span> + <span class="key light">8</span>                             |
+| `CEDAR_KB_w`        | <span class="_2nd">w</span> / <span class="key _2nd">2nd</span> + <span class="key light">9</span>                             |
+| `CEDAR_KB_LSQUARE`  | <span class="_2nd">[</span> / <span class="key _2nd">2nd</span> + <span class="key light">&times;</span>                       |
+| `CEDAR_KB_RSQUARE`  | <span class="_2nd">]</span> / <span class="key _2nd">2nd</span> + <span class="key light">&minus;</span>                       |
+| `CEDAR_KB_POWE`     | <span class="_2nd">e<sup>x</sup></span> / <span class="key _2nd">2nd</span> + <span class="key dark">ln</span>                 |
+| `CEDAR_KB_L1`       | <span class="_2nd">L1</span> / <span class="key _2nd">2nd</span> + <span class="key light">1</span>                            |
+| `CEDAR_KB_L2`       | <span class="_2nd">L2</span> / <span class="key _2nd">2nd</span> + <span class="key light">2</span>                            |
+| `CEDAR_KB_L3`       | <span class="_2nd">L3</span> / <span class="key _2nd">2nd</span> + <span class="key light">3</span>                            |
+| `CEDAR_KB_L4`       | <span class="_2nd">L4</span> / <span class="key _2nd">2nd</span> + <span class="key light">4</span>                            |
+| `CEDAR_KB_L5`       | <span class="_2nd">L5</span> / <span class="key _2nd">2nd</span> + <span class="key light">5</span>                            |
+| `CEDAR_KB_L6`       | <span class="_2nd">L6</span> / <span class="key _2nd">2nd</span> + <span class="key light">6</span>                            |
+| `CEDAR_KB_RCL`      | <span class="_2nd">rcl</span> / <span class="key _2nd">2nd</span> + <span class="key dark">sto&rarr;</span>                    |
+| `CEDAR_KB_MEM`      | <span class="_2nd">mem</span> / <span class="key _2nd">2nd</span> + <span class="key light">+</span>                           |
+| `CEDAR_KB_CATALOG`  | <span class="_2nd">catalog</span> / <span class="key _2nd">2nd</span> + <span class="key light">0</span>                       |
+| `CEDAR_KB_IMAG`     | <span class="_2nd"><i>i</i></span> / <span class="key _2nd">2nd</span> + <span class="key light">.</span>                      |
+| `CEDAR_KB_ANS`      | <span class="_2nd">ans</span> / <span class="key _2nd">2nd</span> + <span class="key light">(-)</span>                         |
+| `CEDAR_KB_ENTRY`    | <span class="_2nd">entry</span> / <span class="key _2nd">2nd</span> + <span class="key light">enter</span>                     |
+| `CEDAR_KB_BRIGHTEN` | <span class="_2nd">&#9788;</span> / <span class="key _2nd">2nd</span> + <span class="key light">&#x2BC5;</span>                |
+| `CEDAR_KB_DARKEN`   | <span class="_2nd"><small>&#9788;</small></span> / <span class="key _2nd">2nd</span> + <span class="key light">&#x2BC5;</span> |
 
 | Name                | Key                                                                                                                |
 |---------------------|--------------------------------------------------------------------------------------------------------------------|
@@ -136,7 +136,7 @@ The predefined keycodes are listed below:
 | `CEDAR_KB_J`        | <span class="alpha">J</span> / <span class="key alpha">alpha</span> + <span class="key dark">,</span>              |
 | `CEDAR_KB_K`        | <span class="alpha">K</span> / <span class="key alpha">alpha</span> + <span class="key dark">(</span>              |
 | `CEDAR_KB_L`        | <span class="alpha">L</span> / <span class="key alpha">alpha</span> + <span class="key dark">)</span>              |
-| `CEDAR_KB_M`        | <span class="alpha">M</span> / <span class="key alpha">alpha</span> + <span class="key light">&div;</span>         |
+| `CEDAR_KB_M`        | <span class="alpha">M</span> / <span class="key alpha">alpha</span> + <span class="key light">&divide;</span>      |
 | `CEDAR_KB_N`        | <span class="alpha">N</span> / <span class="key alpha">alpha</span> + <span class="key dark">log</span>            |
 | `CEDAR_KB_O`        | <span class="alpha">O</span> / <span class="key alpha">alpha</span> + <span class="key light">7</span>             |
 | `CEDAR_KB_P`        | <span class="alpha">P</span> / <span class="key alpha">alpha</span> + <span class="key light">8</span>             |
@@ -151,8 +151,8 @@ The predefined keycodes are listed below:
 | `CEDAR_KB_Y`        | <span class="alpha">Y</span> / <span class="key alpha">alpha</span> + <span class="key light">1</span>             |
 | `CEDAR_KB_Z`        | <span class="alpha">Z</span> / <span class="key alpha">alpha</span> + <span class="key light">2</span>             |
 | `CEDAR_KB_THETA`    | <span class="alpha">&theta;</span> / <span class="key alpha">alpha</span> + <span class="key light">3</span>       |
-| `CEDAR_KB_QUOTE`    | <span class="alpha">"</span> / <span class="key alpha">alpha</span> + <span class="key light">&plus;</span>        |
-| `CEDAR_KB_SPACE`    | <span class="alpha">&blank;</span> / <span class="key alpha">alpha</span> + <span class="key light">0</span>       |
+| `CEDAR_KB_QUOTE`    | <span class="alpha">"</span> / <span class="key alpha">alpha</span> + <span class="key light">+</span>             |
+| `CEDAR_KB_SPACE`    | <span class="alpha">&#x2423;</span> / <span class="key alpha">alpha</span> + <span class="key light">0</span>       |
 | `CEDAR_KB_COLON`    | <span class="alpha">:</span> / <span class="key alpha">alpha</span> + <span class="key light">.</span>             |
 | `CEDAR_KB_QUESTION` | <span class="alpha">?</span> / <span class="key alpha">alpha</span> + <span class="key light">?</span>             |
 | `CEDAR_KB_SOLVE`    | <span class="alpha">solve</span> / <span class="key alpha">alpha</span> + <span class="key light">enter</span>     |
@@ -163,12 +163,12 @@ span.key {
 	border: solid 1px black;
 	border-radius: 5px;
 	display: inline-block;
-	min-width: 1em;
+	min-width: 1.5em;
 	text-align: center;
 	font-weight: bold;
 }
 
-span.key.2nd {
+span.key._2nd {
 	color: white;
 	background-color: #51BCFB;
 }
@@ -188,11 +188,11 @@ span.key.dark {
 	background-color: black;
 }
 
-span.2ndtext {
+span._2nd {
 	color: #51BCFB;
 }
 
-span.alphatext {
+span.alpha {
     color: #5AFA5A;
 }
 </style>
