@@ -8,7 +8,7 @@ DESCRIPTION = "Cedar Demo"
 COMPRESSED = NO
 ARCHIVED = NO
 
-EXTRA_ASM_SOURCES = $(wildcard ../out/*)
+EXTRA_ASM_SOURCES = ../out/libcedar.src
 
 CFLAGS = -Wall -Wextra -Oz -I ../include/
 CXXFLAGS = -Wall -Wextra -Oz -I ../include/

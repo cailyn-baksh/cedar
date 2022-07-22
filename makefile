@@ -2,56 +2,73 @@ CEDEV = $(shell cedev-config --prefix)
 OUTDIR = out
 
 NAME = cedar
-SRCS = $(wildcard src/*.c src/*.asm)
-OBJS = $(addsuffix .src,$(patsubst src/%,$(OUTDIR)/%,$(SRCS)))
+CSRCS = $(wildcard src/*.c)
+ASMSRCS = $(wildcard src/*.asm)
+OBJS = $(addsuffix .ll,$(patsubst src/%,$(OUTDIR)/%,$(CSRCS)))
 INCLUDES = include/ $(CEDEV)/include
+DEFINES = DEBUG
 
+CFLAGS = -Oz -Wall -Wextra -Wno-incompatible-function-pointer-types $(addprefix -I ,$(INCLUDES)) $(addprefix -D,$(DEFINES))
 
 # verbosity
 V ?= 0
 ifeq ($(V),0)
 Q = @
-FASMG_V := -n
 else
 Q =
-FASMG_V := -v$(V)
 endif
 
 # os specific
 ifeq ($(OS),Windows_NT)
 CC = ez80-clang.exe
+LINK = ez80-link.exe
+FASMG = fasmg.exe
 NATIVEPATH ?= $(subst /,\,$1)
+QUOTE_ARG = "$(subst ",',$1)"#'
+RM = ( del /f /q $1 2>nul || call )
 RMDIR = ( rmdir /s /q $1 2>nul || call )
 MKDIR = ( mkdir $1 2>nul || call )
 COPY = ( echo F | xcopy $1 $2 /Q /Y /I /K 1>nul 2>nul || call )
+CAT = type
+NUL = nul
 else
 CC = ez80-clang
+LINK = ez80-link
+FASMG = fasmg
 NATIVEPATH ?= $(subst \,/,$1) $1
-RMDIR = rm -rf
+QUOTE_ARG = '$(subst ','\'',$1)'#'
+RM = rm -f $1
+RMDIR = rm -rf $1
 MKDIR = mkdir -p $1
 COPY = cp $1 $2
+CAT = cat
+NUL = /dev/null
 endif
 
-CFLAGS = -S -Wall -Wextra -Wno-incompatible-function-pointer-types -Oz -mllvm -profile-guided-section-prefix=false $(addprefix -I ,$(INCLUDES)) -DDEBUG
-
-# TODO: look at https://github.com/jacobly0/fasmg-ez80/blob/main/tiformat.inc
-# TODO: see if possible to compile appvar or compile into a single asm source
-
 all: $(OUTDIR) $(OBJS)
+	@echo [linking] out/lib$(NAME).ll
+	$(Q)$(LINK) -S $(OBJS) -o out/lib$(NAME).ll
+	@echo [assemblifying] out/cout.src
+	$(Q)$(CC) out/lib$(NAME).ll -Oz -S -mllvm -profile-guided-section-prefix=false -o out/cout.src
+	@echo [combining assembly] out/lib$(NAME).src
+	$(Q)$(CAT) $(call NATIVEPATH,out/cout.src) $(call NATIVEPATH,$(ASMSRCS)) > $(call NATIVEPATH,out/lib$(NAME).src) 2>$(NUL)
+	$(Q)$(call RM,$(call NATIVEPATH,out/cout.src))
+	@echo [done]
 
 $(OUTDIR)/%.asm.src: src/%.asm
-	$(Q)echo [copying] $(call NATIVEPATH,$<)
+	@echo [copying] $(call NATIVEPATH,$<)
 	$(Q)$(call COPY,$(call NATIVEPATH,$<),$(call NATIVEPATH,$@))
 
-$(OUTDIR)/%.c.src: src/%.c
-	$(Q)echo [compiling] $(call NATIVEPATH,$<)
-	$(Q)$(CC) $(CFLAGS) $< -o $@
+$(OUTDIR)/%.c.ll: src/%.c
+	@echo [compiling] $(call NATIVEPATH,$<)
+	$(Q)$(CC) $(CFLAGS) -S -emit-llvm $< -o $@
 
 $(OUTDIR):
 	$(Q)$(call MKDIR,$(OUTDIR))
 
 clean:
 	$(Q)$(call RMDIR,$(OUTDIR))
+	$(MAKE) -C test clean
 
 rebuild: clean all
 
