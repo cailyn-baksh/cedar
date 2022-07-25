@@ -69,8 +69,6 @@ struct CedarEventHandler {
 	CedarEventHandler *next;
 };
 
-//struct CedarEventHandlerChain
-
 /*
  * A window.
  *

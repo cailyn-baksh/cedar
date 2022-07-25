@@ -22,6 +22,12 @@ _cedar_Init:
 	call _gfx_SetTextConfig
 	pop hl
 
+	; gfx_SetTransparentColor(255)
+	ld l,0xFF
+	push hl
+	call _gfx_SetTransparentColor
+	pop hl
+
 	pop hl
 	ret
 
@@ -33,4 +39,5 @@ _cedar_Cleanup:
 	extern _gfx_Begin
 	extern _gfx_SetDraw
 	extern _gfx_SetTextConfig
+	; extern _gfx_SetTransparentColor  ; already extern'd by C code
 	extern _gfx_End

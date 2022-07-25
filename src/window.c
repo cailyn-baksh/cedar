@@ -362,10 +362,12 @@ void paintActiveSubmenus(CedarMenu *menu) {
 						gfx_SetTextFGColor(255);
 						gfx_SetTextBGColor(0);
 						gfx_SetTextTransparentColor(0);
+						gfx_SetTransparentColor(0);  // NOTE: TransparentColor used bc of text clipping bug in graphx
 						gfx_PrintStringXY(current->label, 10, submenuItemY);
 						gfx_SetTextFGColor(0);
 						gfx_SetTextBGColor(255);
 						gfx_SetTextTransparentColor(255);
+						gfx_SetTransparentColor(255);
 					} else {
 						gfx_PrintStringXY(current->label, 10, submenuItemY);
 					}
@@ -602,16 +604,6 @@ void cedar_Display(CedarWindow *window) {
 		for (CedarWidget *widget=window->widgets.first; widget != NULL; widget = widget->next) {
 			if (widget->repaint || window->repaint) {
 				// translate widget's coordinates to a position in the drawing buffer
-				/*CedarRect bufferRegion = {
-					.x = (widget->bounds.x + window->origin.x) - window->frame.x,
-					.y = (widget->bounds.y + window->origin.y) - window->frame.y,
-					.width = widget->bounds.width,
-					.height = widget->bounds.height
-				};
-				CedarPoint realPos = {
-					.x = bufferRegion.x,
-					.y = bufferRegion.y
-				};*/
 				bool onscreen = true;
 
 				if (widget->bounds.xmin > window->frame.xmax
@@ -678,10 +670,12 @@ void cedar_Display(CedarWindow *window) {
 						gfx_SetTextFGColor(255);
 						gfx_SetTextBGColor(0);
 						gfx_SetTextTransparentColor(0);
+						gfx_SetTransparentColor(0);
 						gfx_PrintStringXY(current->label, menuBarPaintOffset, 5);
 						gfx_SetTextFGColor(0);
 						gfx_SetTextBGColor(255);
 						gfx_SetTextTransparentColor(255);
+						gfx_SetTransparentColor(255);
 					} else {
 						gfx_PrintStringXY(current->label, menuBarPaintOffset, 5);
 					}
