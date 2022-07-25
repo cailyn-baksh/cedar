@@ -4,6 +4,10 @@
 #ifndef _LIBCEDAR_LABEL_H_
 #define _LIBCEDAR_LABEL_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <cedar.h>
 
 /*
@@ -24,5 +28,9 @@ typedef struct {
  * Returns a new Label widget
  */
 CedarWidget *CedarLabel(ID id, int x, int y, int width, int height, const char *text);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _LIBCEDAR_LABEL_H_

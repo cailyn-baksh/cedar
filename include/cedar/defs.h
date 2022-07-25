@@ -1,6 +1,10 @@
 #ifndef _LIBCEDAR_DEFS_H_
 #define _LIBCEDAR_DEFS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 #include <keypadc.h>
@@ -203,5 +207,17 @@ typedef CALLBACKRESULT CedarEventHandlerCallback(void *self, EVENT event, uint24
 #define CEDAR_KB_RESOL		CEDAR_KB_COS
 #define CEDAR_KB_FRAC		CEDAR_KB_TAN
 #define CEDAR_KB_ANNUL		CEDAR_KB_CLEAR
+
+
+#define MENUBAR_HEIGHT 20
+#define MENU_DROPDOWN_WIDTH 100
+#define MENU_DROPDOWN_HEIGHT (GFX_LCD_HEIGHT - MENUBAR_HEIGHT - 5)
+
+
+#define ATTR_FOCUSABLE			0x1
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _LIBCEDAR_DEFS_H_

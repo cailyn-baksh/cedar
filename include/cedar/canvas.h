@@ -1,6 +1,10 @@
 #ifndef _LIBCEDAR_CANVAS_H_
 #define _LIBCEDAR_CANVAS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <cedar.h>
 
 /*
@@ -12,5 +16,9 @@
  * height	The height of the canvas
  */
 CedarWidget *Canvas(int x, int y, int width, int height);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _LIBCEDAR_CANVAS_H_
