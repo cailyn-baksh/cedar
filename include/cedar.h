@@ -10,8 +10,8 @@
 // Version info
 // minor version is incremented each release
 // major version is incremented after each breaking change (after major version 1)
-#define LIBCEDAR_MAJOR		0
-#define LIBCEDAR_MINOR		4
+#define LIBCEDAR_MAJOR		1
+#define LIBCEDAR_MINOR		0
 #define LIBCEDAR_REVISION	0
 #define LIBCEDAR_VERSION_STR _LIBCEDAR_QUOTE(LIBCEDAR_MAJOR) "." _LIBCEDAR_QUOTE(LIBCEDAR_MINOR) "." _LIBCEDAR_QUOTE(LIBCEDAR_REVISION)
 
