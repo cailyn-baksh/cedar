@@ -2,9 +2,8 @@ CEDEV = $(shell cedev-config --prefix)
 OUTDIR = out
 
 NAME = cedar
-CSRCS = $(wildcard src/*.c)
-ASMSRCS = $(wildcard src/*.asm)
-OBJS = $(addsuffix .ll,$(patsubst src/%,$(OUTDIR)/%,$(CSRCS)))
+OBJS = $(addsuffix .ll,$(patsubst src/%,$(OUTDIR)/%,$(wildcard src/*.c)))
+ASM = $(wildcard src/%.asm)
 INCLUDES = include/ $(CEDEV)/include
 DEFINES = DEBUG
 
@@ -45,19 +44,14 @@ CAT = cat
 NUL = /dev/null
 endif
 
-all: $(OUTDIR) $(OBJS)
+all: $(OUTDIR) $(OBJS) 
 	@echo [linking] out/lib$(NAME).ll
 	$(Q)$(LINK) -S $(OBJS) -o out/lib$(NAME).ll
-	@echo [assemblifying] out/cout.src
-	$(Q)$(CC) out/lib$(NAME).ll -Oz -S -mllvm -profile-guided-section-prefix=false -o out/cout.src
-	@echo [combining assembly] out/lib$(NAME).src
-	$(Q)$(CAT) $(call NATIVEPATH,out/cout.src) $(call NATIVEPATH,$(ASMSRCS)) > $(call NATIVEPATH,out/lib$(NAME).src) 2>$(NUL)
-	$(Q)$(call RM,$(call NATIVEPATH,out/cout.src))
+	@echo [assemblifying C] out/Cout.tmp
+	$(Q)$(CC) out/lib$(NAME).ll -Oz -S -mllvm -profile-guided-section-prefix=false -o out/Cout.tmp
+	@echo [combining asm] out/lib$(NAME).src
+	$(Q)$(CAT) $(call NATIVEPATH,out/Cout.tmp) $(call NATIVEPATH,$(ASM)) > $(call NATIVEPATH,out/lib$(NAME).src) 2>$(NUL)
 	@echo [done]
-
-$(OUTDIR)/%.asm.src: src/%.asm
-	@echo [copying] $(call NATIVEPATH,$<)
-	$(Q)$(call COPY,$(call NATIVEPATH,$<),$(call NATIVEPATH,$@))
 
 $(OUTDIR)/%.c.ll: src/%.c
 	@echo [compiling] $(call NATIVEPATH,$<)
