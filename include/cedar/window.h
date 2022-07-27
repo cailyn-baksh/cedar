@@ -30,6 +30,11 @@ struct CedarWindow {
 		CedarWidget *selected;
 	} widgets;
 
+	struct {
+		CedarTimer *first;
+		CedarTimer *last;
+	} timers;
+
 	CedarMenu *menu;
 
 	gfx_region_t frame;

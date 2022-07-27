@@ -15,12 +15,10 @@
 #define BUTTON_BUTTON		0x0103
 #define BUTTON_OFFSCREEN	0x0104
 #define CHECKBOX_CHK		0x0105
+#define TMR_TIMER			0x0106
 
 CALLBACKRESULT mainWindowEventHandler(CedarWindow *self, EVENT event, uint24_t param) {
 	switch (event) {
-		case EVENT_PAINT:
-			self->repaint = true;
-			break;
 		case EVENT_MENUSELECT:
 			if (param == MENUITEM_EXIT) {
 				return CALLBACK_EXIT;
@@ -35,6 +33,9 @@ CALLBACKRESULT mainWindowEventHandler(CedarWindow *self, EVENT event, uint24_t p
 					dbg_printf("btn2\n");
 					break;
 			}
+			break;
+		case EVENT_TICK:
+			dbg_printf("%d ticked\n", param);
 			break;
 	}
 
@@ -68,6 +69,8 @@ int main() {
 	cedar_AddWidget(&window, CedarButton(BUTTON_OFFSCREEN, 420, 80, 50, 20, "btn2"));
 
 	cedar_AddWidget(&window, CedarCheckbox(CHECKBOX_CHK, 180, 80));
+
+	cedar_AddTimer(&window, TMR_TIMER, 1000);
 
 	cedar_RegisterEventHandler(window.handlers, mainWindowEventHandler);
 

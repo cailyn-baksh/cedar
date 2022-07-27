@@ -53,6 +53,7 @@ extern "C" {
 
 #include <cedar/defs.h>
 #include <cedar/menu.h>
+#include <cedar/timer.h>
 #include <cedar/widget.h>
 #include <cedar/window.h>
 

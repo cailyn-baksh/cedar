@@ -5,6 +5,7 @@
 
 #include <graphx.h>
 #include <keypadc.h>
+#include <sys/timers.h>
 
 #define _NOEXTERN
 #include "cedar.h"
@@ -285,6 +286,9 @@ void cedar_InitWindow(CedarWindow *window) {
 	window->widgets.last = NULL;
 	window->widgets.selected = NULL;
 
+	window->timers.first = NULL;
+	window->timers.last = NULL;
+
 	window->menu = NULL;
 
 	window->frame.xmin = 0;
@@ -438,7 +442,19 @@ void cedar_Display(CedarWindow *window) {
 
 	for (;;) {
 		/* Dispatch events */
+		/* Timers */
+		{
+			unsigned int now = timer_Get(1);
 
+			for (CedarTimer *current=window->timers.first; current != NULL; current = current->next) {
+				if ((unsigned int)(now - current->lastTick) >= current->period) {
+					callbackReturnCode = cedar_dispatchEvent(EVENT_TICK, window, current->id);
+					current->lastTick = now;
+				}
+			}
+		}
+
+		/* Key Events */
 		// store current keyboard state and then update keyboard state
 		memcpy(prevKbState, (void *)0xF50010, sizeof(uint16_t) * 8);
 		kb_Scan();
