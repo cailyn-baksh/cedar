@@ -17,6 +17,13 @@ typedef struct {
 	bool checked;
 } CheckboxData;
 
+/*
+ * Create a new Checkbox widget
+ *
+ * id		The ID of the widget
+ * x		The X coordinate of the widget
+ * y		The Y coordinate of the widget
+ */
 CedarWidget *CedarCheckbox(ID id, int x, int y);
 
 #ifdef __cplusplus

@@ -1,8 +1,8 @@
 # Widgets
 
-## `Widget`
+## `CedarWidget`
 ```c
-typedef struct Widget Widget;
+typedef struct CedarWidget CedarWidget;
 ```
 A Widget.
 
@@ -73,7 +73,7 @@ Label data. In label widgets, `data` is an instance of this struct.
 The text of the label
 
 
-### `Widget *Label(int x, int y, int width, int height, const char *text)`
+### `CedarWidget *CedarLabel(int x, int y, int width, int height, const char *text)`
 Creates a label widget. A label is a widget which contains text.
 
 **x** The X coordinate of the left side of the label
@@ -106,7 +106,7 @@ The text of the button.
 Whether or not the button is focused
 
 
-### `Widget *Button(int x, int y, int width, int height, const char *text)`
+### `CedarWidget *CedarButton(int x, int y, int width, int height, const char *text)`
 Creates a button widget.
 
 **x** The X coordinate of the left side of the button
@@ -120,3 +120,28 @@ Creates a button widget.
 **text** The content of the label
 
 Returns a new Button widget
+
+---
+
+## Checkbox
+A widget which can be toggled on or off.
+
+
+### `CheckboxData`
+Checkbox data. In checkbox widgets, `data` is an instance of this stucture.
+
+
+#### `bool checked`
+Whether or not the checkbox is checked
+
+
+### `CedarWidget *CedarCheckbox(ID id, int x, int y)`
+Creates a new checkbox
+
+**id** The ID of the widget
+
+**x** The X coordinate of the widget
+
+**y** The Y coordinate of the widget
+
+Returns a pointer to the widget
