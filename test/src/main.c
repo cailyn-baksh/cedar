@@ -1,5 +1,6 @@
 #include <cedar.h>
 #include <cedar/button.h>
+#include <cedar/checkbox.h>
 #include <cedar/label.h>
 
 #undef NDEBUG
@@ -13,6 +14,7 @@
 #define LABEL_ALPHABET		0x0102
 #define BUTTON_BUTTON		0x0103
 #define BUTTON_OFFSCREEN	0x0104
+#define CHECKBOX_CHK		0x0105
 
 CALLBACKRESULT mainWindowEventHandler(CedarWindow *self, EVENT event, uint24_t param) {
 	switch (event) {
@@ -64,6 +66,8 @@ int main() {
 
 	cedar_AddWidget(&window, CedarButton(BUTTON_BUTTON, 40, 180, 60, 20, "Button!"));
 	cedar_AddWidget(&window, CedarButton(BUTTON_OFFSCREEN, 420, 80, 50, 20, "btn2"));
+
+	cedar_AddWidget(&window, CedarCheckbox(CHECKBOX_CHK, 180, 80));
 
 	cedar_RegisterEventHandler(window.handlers, mainWindowEventHandler);
 

@@ -47,7 +47,7 @@ typedef CALLBACKRESULT CedarEventHandlerCallback(void *self, EVENT event, uint24
 #define EVENT_KEYDOWN				((EVENT)0x000006)
 #define EVENT_KEYUP					((EVENT)0x000007)
 #define EVENT_MENUSELECT			((EVENT)0x000008)
-#define EVENT_HOTKEY				((EVENT)0x000009)
+#define EVENT_HOTKEY				((EVENT)0x000009)		/* DEPRECATED */
 #define EVENT_TICK					((EVENT)0x00000A)
 #define EVENT_VSCROLL				((EVENT)0x00000B)
 #define EVENT_HSCROLL				((EVENT)0x00000C)

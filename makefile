@@ -3,7 +3,7 @@ OUTDIR = out
 
 NAME = cedar
 OBJS = $(addsuffix .ll,$(patsubst src/%,$(OUTDIR)/%,$(wildcard src/*.c)))
-ASM = $(wildcard src/%.asm)
+ASM = $(wildcard src/*.asm)
 INCLUDES = include/ $(CEDEV)/include
 DEFINES = DEBUG
 
@@ -44,7 +44,7 @@ CAT = cat
 NUL = /dev/null
 endif
 
-all: $(OUTDIR) $(OBJS) 
+all: $(OUTDIR) $(OBJS) $(ASM)
 	@echo [linking] out/lib$(NAME).ll
 	$(Q)$(LINK) -S $(OBJS) -o out/lib$(NAME).ll
 	@echo [assemblifying C] out/Cout.tmp

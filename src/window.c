@@ -229,6 +229,11 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 					}
 
 					return CALLBACK_DO_NOT_PROPAGATE;
+				default:
+					if (self->menu != NULL && self->menu->selected != NULL) {
+						// menu is selected, dont propagate keydown to widgets
+						return CALLBACK_DO_NOT_PROPAGATE;
+					}
 			}
 			break;
 		case EVENT_KEYUP:
