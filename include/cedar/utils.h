@@ -18,6 +18,16 @@ extern "C" {
  */
 void cedar_wrapTextInBox(const char *str, int x, int y, unsigned int width, unsigned int height);
 
+/*
+ * Use a sprite to mask a colour drawn to the screen
+ *
+ * x			The X coordinate to start drawing at
+ * y			The Y coordinate to start drawing at
+ * color		The colour to use
+ * mask			The sprite to use as the mask mask
+ */
+void cedar_SpriteColorMask(uint24_t x, uint8_t y, uint8_t color, gfx_sprite_t *mask);
+
 #ifdef __cplusplus
 }
 #endif

@@ -56,3 +56,23 @@ void cedar_wrapTextInBox(const char *str, int x, int y, unsigned int width, unsi
 		}
 	} while (*(str++));
 }
+
+void cedar_SpriteColorMask(uint24_t x, uint8_t y, uint8_t color, gfx_sprite_t *mask) {
+	size_t spriteSize = mask->width * mask->height;
+
+	uint24_t currentX = x;
+	uint8_t currentY = y;
+	uint8_t prevColor = gfx_SetColor(0);  // get the old color
+
+	for (size_t i=0; i < spriteSize; ++i, ++currentX) {
+		if (currentX > mask->width) {
+			currentX = x;
+			currentY += 1;
+		}
+
+		gfx_SetColor(mask->data[i] & color);
+		gfx_SetPixel(currentX, currentY);
+	}
+
+	gfx_SetColor(prevColor);
+}
