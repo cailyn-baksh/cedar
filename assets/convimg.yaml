@@ -1,0 +1,21 @@
+palettes:
+  - name: cedar_sprite_mask_palette
+    max-entries: 4
+    fixed-entries:
+      - image: palette.png
+
+converts:
+  - name: cedar_sprite_masks
+    palette: cedar_sprite_mask_palette
+    images:
+      - "*.png"
+    transparent-color-index: 2
+
+outputs:
+  - type: c
+    include-file: assets.h
+    palettes:
+      - cedar_sprite_mask_palette
+    converts:
+      - cedar_sprite_masks
+    directory: "generated/"

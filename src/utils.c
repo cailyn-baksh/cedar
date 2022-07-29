@@ -1,6 +1,8 @@
 #include "cedar.h"
 #include "cedar/utils.h"
 
+#include <debug.h>
+
 #define isWhitespace(c) (c == '\0'\
 					  || c == ' '\
 					  || c == '\t')
@@ -57,6 +59,12 @@ void cedar_wrapTextInBox(const char *str, int x, int y, unsigned int width, unsi
 	} while (*(str++));
 }
 
+#define MASK_BLACK	0x0
+#define MASK_WHITE	0x1
+#define MASK_TRANS	0x2
+#define MASK_COLOR	0x3
+
+// this routine can probably be rewritted in asm
 void cedar_SpriteColorMask(uint24_t x, uint8_t y, uint8_t color, gfx_sprite_t *mask) {
 	size_t spriteSize = mask->width * mask->height;
 
@@ -65,12 +73,24 @@ void cedar_SpriteColorMask(uint24_t x, uint8_t y, uint8_t color, gfx_sprite_t *m
 	uint8_t prevColor = gfx_SetColor(0);  // get the old color
 
 	for (size_t i=0; i < spriteSize; ++i, ++currentX) {
-		if (currentX > mask->width) {
+		if (currentX >= mask->width + x) {
 			currentX = x;
 			currentY += 1;
 		}
 
-		gfx_SetColor(mask->data[i] & color);
+		switch (mask->data[i]) {
+			case MASK_BLACK:
+				gfx_SetColor(CEDAR_COLOR_BLACK);
+				break;
+			case MASK_WHITE:
+				gfx_SetColor(CEDAR_COLOR_WHITE);
+				break;
+			case MASK_TRANS:
+				continue;
+			case MASK_COLOR:
+				gfx_SetColor(color);
+				break;
+		}
 		gfx_SetPixel(currentX, currentY);
 	}
 

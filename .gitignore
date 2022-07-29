@@ -3,3 +3,4 @@ out/
 *.src
 bin/
 obj/
+assets/generated

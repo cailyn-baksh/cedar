@@ -219,6 +219,10 @@ typedef CALLBACKRESULT CedarEventHandlerCallback(void *self, EVENT event, uint24
 
 #define ATTR_FOCUSABLE			0x1
 
+// colors
+#define CEDAR_COLOR_BLACK	0x00
+#define CEDAR_COLOR_WHITE	0xFF
+
 #ifdef __cplusplus
 }
 #endif

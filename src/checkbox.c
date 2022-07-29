@@ -3,7 +3,9 @@
 #include <cedar.h>
 #include <cedar/widget.h>
 #include <cedar/checkbox.h>
+#include <cedar/utils.h>
 
+#include "assets.h"
 #include "cedardbg.h"
 
 CALLBACKRESULT defaultCheckboxHandler(CedarWidget *self, EVENT event, uint24_t param) {
@@ -21,15 +23,15 @@ CALLBACKRESULT defaultCheckboxHandler(CedarWidget *self, EVENT event, uint24_t p
 
 			// TODO: indicate when selected
 
-			gfx_Rectangle(pos->xmin, pos->ymin, CEDAR_CHECKBOX_WIDTH, CEDAR_CHECKBOX_HEIGHT);
+			//gfx_SetPalette(cedar_sprite_mask_palette, sizeof_cedar_sprite_mask_palette, cedar_sprite_masks_palette_offset);
+			//gfx_Sprite(checkbox_unchecked, pos->xmin, pos->ymin);
+			//gfx_SetDefaultPalette(gfx_8bpp);
+			//gfx_Rectangle(pos->xmin, pos->ymin, CEDAR_CHECKBOX_WIDTH, CEDAR_CHECKBOX_HEIGHT);
 
 			if (((CheckboxData *)self->data)->checked) {
-				gfx_FillRectangle(pos->xmin+1, pos->ymin+1, CEDAR_CHECKBOX_WIDTH-2, CEDAR_CHECKBOX_HEIGHT-2);
-
-				gfx_SetColor(255);
-				gfx_Line_NoClip(pos->xmin+2, pos->ymax-4, pos->xmin+4, pos->ymax-2);
-				gfx_Line_NoClip(pos->xmin+4, pos->ymax-2, pos->xmax-2, pos->ymin+2);
-				gfx_SetColor(0);
+				cedar_SpriteColorMask(pos->xmin, pos->ymin, 0x00, checkbox_checked);
+			} else {
+				cedar_SpriteColorMask(pos->xmin, pos->ymin, 0x00, checkbox_unchecked);
 			}
 			break;
 		}
