@@ -65,7 +65,7 @@ void cedar_wrapTextInBox(const char *str, int x, int y, unsigned int width, unsi
 #define MASK_COLOR	0x3
 
 // this routine can probably be rewritted in asm
-void cedar_SpriteColorMask(uint24_t x, uint8_t y, uint8_t color, gfx_sprite_t *mask) {
+/*void cedar_SpriteColorMask(uint24_t x, uint8_t y, uint8_t color, gfx_sprite_t *mask) {
 	size_t spriteSize = mask->width * mask->height;
 
 	uint24_t currentX = x;
@@ -95,4 +95,4 @@ void cedar_SpriteColorMask(uint24_t x, uint8_t y, uint8_t color, gfx_sprite_t *m
 	}
 
 	gfx_SetColor(prevColor);
-}
+}*/

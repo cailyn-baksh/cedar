@@ -10,6 +10,7 @@ converts:
     images:
       - "*.png"
     transparent-color-index: 2
+#    bpp: 2
 
 outputs:
   - type: c
