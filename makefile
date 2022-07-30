@@ -25,6 +25,7 @@ CC = ez80-clang.exe
 LINK = ez80-link.exe
 FASMG = fasmg.exe
 CONVIMG = convimg.exe
+LINKASM = powershell.exe .\\tools\\linkasm.ps1
 NATIVEPATH ?= $(subst /,\,$1)
 QUOTE_ARG = "$(subst ",',$1)"#'
 RM = ( del /f /q $(call NATIVEPATH,$1) 2>nul || call )
@@ -39,6 +40,7 @@ CC = ez80-clang
 LINK = ez80-link
 FASMG = fasmg
 CONVIMG = convimg
+LINKASM = ./tools/linkasm.pl
 NATIVEPATH ?= $(subst \,/,$1) $1
 QUOTE_ARG = '$(subst ','\'',$1)'#'
 RM = rm -f $(call NATIVEPATH,$1)
@@ -51,12 +53,13 @@ ARROW = --
 endif
 
 all: $(ASSETS) $(OBJS) $(ASM)
-	@echo [linking] $(call NATIVEPATH,$(OBJS) $(ASSETS)) $(call NATIVEPATH,out/lib$(NAME).ll)
-	$(Q)$(LINK) -S $(OBJS) $(ASSETS) -o out/lib$(NAME).ll
+	@echo [linking C] $(call NATIVEPATH,$(OBJS) $(ASSETS)) $(call NATIVEPATH,out/lib$(NAME).ll)
+	$(Q)$(LINK) $(OBJS) $(ASSETS) -f -o out/lib$(NAME).ll
 	@echo [assemblifying] $(call NATIVEPATH,out/lib$(NAME).ll) $(ARROW) $(call NATIVEPATH,out/Cout.tmp)
 	$(Q)$(CC) out/lib$(NAME).ll -Oz -S -mllvm -profile-guided-section-prefix=false -o out/Cout.tmp
-	@echo [mixing asm] $(call NATIVEPATH,out/Cout.tmp $(ASM)) $(ARROW) out/lib$(NAME).src
-	$(Q)$(CAT) $(call NATIVEPATH,out/Cout.tmp) $(call NATIVEPATH,$(ASM)) > $(call NATIVEPATH,out/lib$(NAME).src) 2>$(NUL)
+	@echo [linking asm] $(call NATIVEPATH,out/Cout.tmp $(ASM)) $(ARROW) out/mixed.src
+	$(Q)$(CAT) $(call NATIVEPATH,out/Cout.tmp) $(call NATIVEPATH,$(ASM)) > $(call NATIVEPATH,out/mixed.src) 2>$(NUL)
+	$(Q)$(LINKASM) $(call NATIVEPATH,out/mixed.src) $(call NATIVEPATH,out/lib$(NAME).src) >$(NUL)
 	@echo [done]
 
 $(OUTDIR)/%.c.ll: src/%.c
@@ -65,7 +68,7 @@ $(OUTDIR)/%.c.ll: src/%.c
 
 $(OBJS): | out
 
-$(ASSETS): | $(OUTDIR)
+$(ASSETS): | out
 
 out:
 	$(Q)$(call MKDIR,$(OUTDIR))
