@@ -169,3 +169,4 @@ endLoop._cedar_SpriteColorMask:
 
 
 	extern _gfx_SetPixel
+	extern _gfx_SetColor

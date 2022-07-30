@@ -44,5 +44,5 @@ _cedar_Cleanup:
 	extern _gfx_Begin
 	extern _gfx_SetDraw
 	extern _gfx_SetTextConfig
-	; extern _gfx_SetTransparentColor  ; already extern'd by C code
+	extern _gfx_SetTransparentColor  ; already extern'd by C code
 	extern _gfx_End
