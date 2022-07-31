@@ -33,6 +33,9 @@ typedef struct CedarEventHandler CedarEventHandler;
 struct CedarTimer;
 typedef struct CedarTimer CedarTimer;
 
+struct CedarColors;
+typedef struct CedarColors CedarColors;
+
 typedef uint24_t CALLBACKRESULT;
 typedef uint24_t EVENT;
 typedef uint24_t ID;

@@ -7,6 +7,8 @@
 #include <keypadc.h>
 #include <sys/timers.h>
 
+#include <cedar/utils.h>
+
 #define _NOEXTERN
 #include "cedar.h"
 #undef _NOEXTERN
@@ -299,6 +301,10 @@ void cedar_InitWindow(CedarWindow *window) {
 	window->origin.x = 0;
 	window->origin.y = 0;
 
+	window->colors.bg = CEDAR_COLOR_WHITE;
+	window->colors.fg = CEDAR_COLOR_BLACK;
+	window->colors.alt = CEDAR_COLOR_BLACK;
+
 	window->handlers = malloc(sizeof(CedarEventHandler));
 	window->handlers->callback = defaultWindowEventHandler;
 	window->handlers->next = NULL;
@@ -344,39 +350,44 @@ void clearRect(int x, int y, int width, int height) {
 /*
  * Paint active submenus.
  */
-void paintActiveSubmenus(CedarMenu *menu) {
+static void paintActiveSubmenus(CedarMenu *menu, CedarWindow *parent) {
 	if (menu->selected != NULL
 	 && menu->selected->child != NULL) {
 		// This menu has a submenu
 		CedarMenu *submenu = menu->selected->child;
+			
 
 		if (menu->submenuActive) {
 			// This is the active submenu; paint it
+
+			gfx_SetColor(parent->colors.fg);
 			gfx_FillRectangle(7, MENUBAR_HEIGHT+2, MENU_DROPDOWN_WIDTH, MENU_DROPDOWN_HEIGHT);
-			clearRect(5, MENUBAR_HEIGHT, MENU_DROPDOWN_WIDTH, MENU_DROPDOWN_HEIGHT);
+			
+			gfx_SetColor(parent->colors.bg);
+			gfx_FillRectangle(5, MENUBAR_HEIGHT, MENU_DROPDOWN_WIDTH, MENU_DROPDOWN_HEIGHT);
+
+			gfx_SetColor(parent->colors.fg);
 			gfx_Rectangle(5, MENUBAR_HEIGHT, MENU_DROPDOWN_WIDTH, MENU_DROPDOWN_HEIGHT);
+
+			cedar_SetColors(parent->colors.fg, parent->colors.bg);
 
 			int submenuItemY = MENUBAR_HEIGHT + 5;
 			for (CedarMenuItem *current=submenu->first; current != NULL; current = current->next) {
 				if (isMenuItemSeparator(current)) {
+					cedar_SetColors(parent->colors.bg, parent->colors.fg);
 					gfx_HorizLine(5, submenuItemY+4, MENU_DROPDOWN_WIDTH);
+					cedar_SetColors(parent->colors.fg, parent->colors.bg);
 					submenuItemY += 10;
 				} else {
 					// TODO: add visual feedback for keypress before keyup
 					if (current == submenu->selected) {
 						// Indicate item is selected
-						gfx_FillRectangle(5, submenuItemY-2, MENU_DROPDOWN_WIDTH, 12);
+						cedar_SetColors(parent->colors.bg, parent->colors.fg);
 
-						// TODO: use customizable colour schemes
-						gfx_SetTextFGColor(255);
-						gfx_SetTextBGColor(0);
-						gfx_SetTextTransparentColor(0);
-						gfx_SetTransparentColor(0);  // NOTE: TransparentColor used bc of text clipping bug in graphx
+						gfx_FillRectangle(6, submenuItemY-2, MENU_DROPDOWN_WIDTH-2, 12);
 						gfx_PrintStringXY(current->label, 10, submenuItemY);
-						gfx_SetTextFGColor(0);
-						gfx_SetTextBGColor(255);
-						gfx_SetTextTransparentColor(255);
-						gfx_SetTransparentColor(255);
+
+						cedar_SetColors(parent->colors.fg, parent->colors.bg);
 					} else {
 						gfx_PrintStringXY(current->label, 10, submenuItemY);
 					}
@@ -386,7 +397,7 @@ void paintActiveSubmenus(CedarMenu *menu) {
 			}
 		} else {
 			// Try painting a child submenu
-			paintActiveSubmenus(submenu);
+			paintActiveSubmenus(submenu, parent);
 		}
 	}
 }
@@ -611,7 +622,7 @@ void cedar_Display(CedarWindow *window) {
 
 		/* Paint */
 		if (window->repaint) {
-			gfx_FillScreen(255);
+			gfx_FillScreen(window->colors.bg);
 		}
 
 		callbackReturnCode = cedar_dispatchEvent(EVENT_PAINT, window, 0);
@@ -642,8 +653,16 @@ void cedar_Display(CedarWindow *window) {
 						.ymax = widget->bounds.ymax - window->frame.ymin + window->origin.y
 					};
 
-					// Widget is fully visible
-					clearRect(realWidgetPos.xmin, realWidgetPos.ymin, GFX_REGION_WIDTH(realWidgetPos), GFX_REGION_HEIGHT(realWidgetPos));
+					// Clear region on screen
+					gfx_SetColor(window->colors.bg);
+					gfx_FillRectangle(realWidgetPos.xmin, realWidgetPos.ymin, GFX_REGION_WIDTH(realWidgetPos), GFX_REGION_HEIGHT(realWidgetPos));
+
+					// Load colors
+					gfx_SetColor(window->colors.fg);
+					gfx_SetTransparentColor(window->colors.bg);
+					gfx_SetTextFGColor(window->colors.fg);
+					gfx_SetTextBGColor(window->colors.bg);
+					cedar_SetTextTransparentColor(window->colors.bg);
 
 					callbackReturnCode = cedar_dispatchEvent(EVENT_PAINT, widget, (uint24_t)&realWidgetPos);
 					// return code is checked after blitting
@@ -668,11 +687,17 @@ void cedar_Display(CedarWindow *window) {
 		if (window->menu != NULL) {
 			unsigned int menuBarPaintOffset = 5;
 
-			clearRect(0, 0, GFX_REGION_WIDTH(window->frame), MENUBAR_HEIGHT);
+			// Clear region on screen
+			gfx_SetColor(window->colors.bg);
+			gfx_FillRectangle(0, 0, GFX_REGION_WIDTH(window->frame), MENUBAR_HEIGHT);
+			
+			// Load colors
+			cedar_SetColors(window->colors.fg, window->colors.bg);
 
 			for (CedarMenuItem *current=window->menu->first; current != NULL; current = current->next) {
 				if (isMenuItemSeparator(current)) {
 					// Draw separator
+					cedar_SetColors(window->colors.bg, window->colors.fg);
 					gfx_VertLine_NoClip(menuBarPaintOffset, 2, MENUBAR_HEIGHT-4);
 					menuBarPaintOffset += 6;
 				} else {
@@ -686,17 +711,12 @@ void cedar_Display(CedarWindow *window) {
 
 					if (current == window->menu->selected) {
 						// indicate item is selected
-						gfx_FillRectangle(menuBarPaintOffset-2, 3, labelWidth+4, 14);
+						cedar_SetColors(window->colors.bg, window->colors.fg);
 
-						gfx_SetTextFGColor(255);
-						gfx_SetTextBGColor(0);
-						gfx_SetTextTransparentColor(0);
-						gfx_SetTransparentColor(0);
+						gfx_FillRectangle(menuBarPaintOffset-2, 3, labelWidth+4, 14);
 						gfx_PrintStringXY(current->label, menuBarPaintOffset, 5);
-						gfx_SetTextFGColor(0);
-						gfx_SetTextBGColor(255);
-						gfx_SetTextTransparentColor(255);
-						gfx_SetTransparentColor(255);
+
+						cedar_SetColors(window->colors.fg, window->colors.bg);
 					} else {
 						gfx_PrintStringXY(current->label, menuBarPaintOffset, 5);
 					}
@@ -705,9 +725,10 @@ void cedar_Display(CedarWindow *window) {
 				}
 			}
 
-			gfx_HorizLine_NoClip(0, MENUBAR_HEIGHT, GFX_REGION_WIDTH(window->frame));
+			paintActiveSubmenus(window->menu, window);
 
-			paintActiveSubmenus(window->menu);
+			cedar_SetColors(window->colors.bg, window->colors.fg);
+			gfx_HorizLine_NoClip(0, MENUBAR_HEIGHT, GFX_REGION_WIDTH(window->frame));
 		}
 
 		dontPropagatePaint:

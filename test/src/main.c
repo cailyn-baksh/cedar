@@ -50,6 +50,9 @@ int main() {
 
 	window.scrollMode = WINDOW_SCROLL_WIDGET;
 
+	window.colors.fg = 0xF0;
+	window.colors.bg = 0x00;
+
 	// Add menu
 	CedarMenu menu;
 	cedar_InitMenu(&menu);

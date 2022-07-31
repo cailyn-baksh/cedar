@@ -29,9 +29,9 @@ CALLBACKRESULT defaultCheckboxHandler(CedarWidget *self, EVENT event, uint24_t p
 			//gfx_Rectangle(pos->xmin, pos->ymin, CEDAR_CHECKBOX_WIDTH, CEDAR_CHECKBOX_HEIGHT);
 
 			if (((CheckboxData *)self->data)->checked) {
-				cedar_SpriteColorMask(pos->xmin, pos->ymin, 0x00, checkbox_checked);
+				cedar_SpriteColorMask(pos->xmin, pos->ymin, self->parent->colors.fg, checkbox_checked);
 			} else {
-				cedar_SpriteColorMask(pos->xmin, pos->ymin, 0x00, checkbox_unchecked);
+				cedar_SpriteColorMask(pos->xmin, pos->ymin, self->parent->colors.fg, checkbox_unchecked);
 			}
 			break;
 		}
