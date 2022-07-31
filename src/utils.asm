@@ -104,7 +104,7 @@ drawPx._cedar_SpriteColorMask:
 		add hl,bc
 		jp (hl)
 
-
+; TODO: rewrite to use a (trans, fg, bg, alt) sprite mask palette
 jmpTbl.drawPx._cedar_SpriteColorMask:
 	jr black.drawPx._cedar_SpriteColorMask
 	jr white.drawPx._cedar_SpriteColorMask
