@@ -15,7 +15,7 @@ _cedar_SpriteColorMask:
 	add hl,sp
 	ld sp,hl
 	; ix+15		gfx_sprite_t *mask
-	; ix+12		uint8_t color
+	; ix+12		struct CedarWindowColors color
 	; ix+9		uint8_t y
 	; ix+6		uint24_t x
 	; ix+3		return addr
@@ -104,23 +104,22 @@ drawPx._cedar_SpriteColorMask:
 		add hl,bc
 		jp (hl)
 
-; TODO: rewrite to use a (trans, fg, bg, alt) sprite mask palette
 jmpTbl.drawPx._cedar_SpriteColorMask:
-	jr black.drawPx._cedar_SpriteColorMask
-	jr white.drawPx._cedar_SpriteColorMask
 	jr trans.drawPx._cedar_SpriteColorMask
-	jr color.drawPx._cedar_SpriteColorMask
+	jr fg.drawPx._cedar_SpriteColorMask
+	jr bg.drawPx._cedar_SpriteColorMask
+	jr alt.drawPx._cedar_SpriteColorMask
 
-black.drawPx._cedar_SpriteColorMask:
-		ld bc,0x00
-		jr setPx.drawPx._cedar_SpriteColorMask
-white.drawPx._cedar_SpriteColorMask:
-		ld bc,0xFF
-		jr setPx.drawPx._cedar_SpriteColorMask
 trans.drawPx._cedar_SpriteColorMask:
 		jp continueLoop._cedar_SpriteColorMask
-color.drawPx._cedar_SpriteColorMask:
-		ld bc,(ix+12)
+fg.drawPx._cedar_SpriteColorMask:
+		ld c,(ix+12)
+		jr setPx.drawPx._cedar_SpriteColorMask
+bg.drawPx._cedar_SpriteColorMask:
+		ld c,(ix+13)
+		jr setPx.drawPx._cedar_SpriteColorMask
+alt.drawPx._cedar_SpriteColorMask:
+		ld c,(ix+14)
 
 
 setPx.drawPx._cedar_SpriteColorMask:
