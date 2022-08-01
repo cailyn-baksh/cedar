@@ -6,4 +6,8 @@ generated/checkbox_unchecked.h
 generated/checkbox_unchecked.c
 generated/palette.h
 generated/palette.c
+generated/radio_deselected.h
+generated/radio_deselected.c
+generated/radio_selected.h
+generated/radio_selected.c
 generated/assets.h
