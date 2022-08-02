@@ -5,7 +5,11 @@
 extern "C" {
 #endif
 
-#include <cedar.h>
+#include <cedar/defs.h>
+
+typedef struct {
+	uint8_t *data;
+} CanvasData;
 
 /*
  * A canvas is a widget which can be freely drawn in.
@@ -15,7 +19,7 @@ extern "C" {
  * width	The width of the canvas
  * height	The height of the canvas
  */
-CedarWidget *Canvas(int x, int y, int width, int height);
+CedarWidget *Canvas(ID id, int x, int y, int width, int height);
 
 #ifdef __cplusplus
 }
