@@ -8,7 +8,7 @@ converts:
   - name: cedar_sprite_masks
     palette: cedar_sprite_mask_palette
     images:
-      - "*.png"
+      - "masks/*.png"
     transparent-color-index: 2
 #    bpp: 2
 
