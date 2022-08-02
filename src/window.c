@@ -182,6 +182,8 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 									return CALLBACK_EXIT;
 							}
 
+							self->widgets.selected->repaint = true;
+							nextWidget->repaint = true;
 							self->widgets.selected = nextWidget;
 
 							callbackReturnCode = cedar_dispatchEvent(EVENT_FOCUS, self->widgets.selected, 0);
@@ -221,6 +223,8 @@ static uint24_t defaultWindowEventHandler(CedarWindow *self, EVENT event, uint24
 									return CALLBACK_EXIT;
 							}
 
+							self->widgets.selected->repaint = true;
+							prevWidget->repaint = true;
 							self->widgets.selected = prevWidget;
 
 							callbackReturnCode = cedar_dispatchEvent(EVENT_FOCUS, self->widgets.selected, 0);
@@ -392,7 +396,7 @@ static void paintActiveSubmenus(CedarMenu *menu, CedarWindow *parent) {
 						gfx_PrintStringXY(current->label, 10, submenuItemY);
 					}
 
-					submenuItemY += 10;
+					submenuItemY += 12;
 				}
 			}
 		} else {
