@@ -20,9 +20,9 @@ CALLBACKRESULT defaultRadioButtonHandler(CedarWidget *self, EVENT event, uint24_
 			gfx_region_t *pos = (gfx_region_t *)param;
 
 			if (*(((RadioButtonData *)self->data)->selection) == self->id) {
-				cedar_SpriteColorMask(pos->xmin, pos->ymin, self->parent->colors, radio_selected);
+				cedar_SpriteColorMask(pos->xmin, pos->ymin, radio_selected);
 			} else {
-				cedar_SpriteColorMask(pos->xmin, pos->ymin, self->parent->colors, radio_deselected);
+				cedar_SpriteColorMask(pos->xmin, pos->ymin, radio_deselected);
 			}
 			break;
 		}
