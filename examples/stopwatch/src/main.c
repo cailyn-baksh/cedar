@@ -16,6 +16,8 @@
 #define BTN_RESET		0x113
 #define TMR_TIMER		0x121
 
+CedarWidget *lblTime;
+
 CALLBACKRESULT mainWindowEventHandler(CedarWindow *self, EVENT event, uint24_t param) {
 	static bool timerOn = false;
 	static uint24_t time = 0;
@@ -43,6 +45,12 @@ CALLBACKRESULT mainWindowEventHandler(CedarWindow *self, EVENT event, uint24_t p
 		case EVENT_TICK:
 			if (timerOn) {
 				++time;
+
+				char s[10];
+				sprintf(s, "%u", time);
+
+				cedar_dispatchEvent(EVENT_SETTEXT, lblTime, s);
+				lblTime->repaint = true;
 			}
 			break;
 	}
@@ -71,7 +79,8 @@ int main() {
 			cedar_AddMenuSeparator(&prgmMenu);
 			cedar_AddMenuItem(&prgmMenu, MENUITEM_EXIT, "Exit");
 
-	cedar_AddWidget(&window, CedarLabel(LBL_TIME, 10, 10, 50, 20, ""));
+	lblTime = CedarLabel(LBL_TIME, 10, 10, 50, 20, "0");
+	cedar_AddWidget(&window, lblTime);
 
 	cedar_AddWidget(&window, CedarButton(BTN_START, 10, 50, 50, 20, "Start"));
 	cedar_AddWidget(&window, CedarButton(BTN_PAUSE, 70, 50, 50, 20, "Pause"));
