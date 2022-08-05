@@ -101,17 +101,6 @@ CALLBACKRESULT _cedar_dispatchEvent(CedarEventHandler *firstHandler, void *self,
  */
 #define cedar_dispatchEvent(event, component, param) _cedar_dispatchEvent((component)->handlers, component, event, param)
 
-struct CedarColors {
-	uint8_t fg;
-	uint8_t bg;
-	uint8_t alt;
-	uint8_t disabled;
-} __attribute__((packed));
-
-#ifndef _NOEXTERN
-extern struct CedarColors cedar_colors;
-#endif  // _NOEXTERN
-
 #ifdef __cplusplus
 }
 #endif

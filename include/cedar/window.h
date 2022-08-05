@@ -9,6 +9,12 @@ extern "C" {
 
 #include <cedar/defs.h>
 
+struct CedarWindowColors {
+	uint8_t fg;
+	uint8_t bg;
+	uint8_t alt;
+} __attribute__((packed));
+
 /*
  * A window.
  *
@@ -61,6 +67,8 @@ struct CedarWindow {
 		WINDOW_SCROLL_PAGE,
 		WINDOW_SCROLL_WIDGET
 	} scrollMode;
+
+	struct CedarWindowColors colors;
 
 	bool repaint;
 

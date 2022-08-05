@@ -26,7 +26,7 @@ void cedar_wrapTextInBox(const char *str, int x, int y, unsigned int width, unsi
  * color		The colour to use
  * mask			The sprite to use as the mask mask
  */
-void cedar_SpriteColorMask(uint24_t x, uint8_t y, gfx_sprite_t *mask);
+void cedar_SpriteColorMask(uint24_t x, uint8_t y, struct CedarWindowColors color, gfx_sprite_t *mask);
 
 /*
  * Replacement for gfx_SetTextTransparentColor that fixes bug in clipped text

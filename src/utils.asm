@@ -14,7 +14,8 @@ _cedar_SpriteColorMask:
 	ld hl,-8								; sp -= 8
 	add hl,sp
 	ld sp,hl
-	; ix+12		gfx_sprite_t *mask
+	; ix+15		gfx_sprite_t *mask
+	; ix+12		struct CedarWindowColors color
 	; ix+9		uint8_t y
 	; ix+6		uint24_t x
 	; ix+3		return addr
@@ -24,7 +25,7 @@ _cedar_SpriteColorMask:
 	; ix-7		uint8_t currentY
 	; ix-8		uint8_t prevColor
 
-	ld iy,(ix+12)							; iy = mask
+	ld iy,(ix+15)							; iy = mask
 
 	; calculate size of sprite
 	ld h,(iy)								; h = mask->width
@@ -112,21 +113,19 @@ jmpTbl.drawPx._cedar_SpriteColorMask:
 trans.drawPx._cedar_SpriteColorMask:
 		jp continueLoop._cedar_SpriteColorMask
 fg.drawPx._cedar_SpriteColorMask:
-		ld a,(_cedar_colors)
+		ld c,(ix+12)
 		jr setPx.drawPx._cedar_SpriteColorMask
 bg.drawPx._cedar_SpriteColorMask:
-		ld a,(_cedar_colors+1)
+		ld c,(ix+13)
 		jr setPx.drawPx._cedar_SpriteColorMask
 alt.drawPx._cedar_SpriteColorMask:
-		ld a,(_cedar_colors+2)
+		ld c,(ix+14)
 
 
 setPx.drawPx._cedar_SpriteColorMask:
 		; Set the pixel color
 		push iy								; save registers for function calls
 		push de
-
-		ld c,a								; bc = color index
 
 		; set the color based on mask's pixel value
 		push bc
@@ -167,9 +166,6 @@ endLoop._cedar_SpriteColorMask:
 	;db 0xFE
 	ret
 
-
-; Externs
-	extern cedar_colors
 
 	extern _gfx_SetPixel
 	extern _gfx_SetColor
