@@ -1,6 +1,8 @@
 #include "cedar.h"
 #include "cedar/utils.h"
 
+#include <debug.h>
+
 #define isWhitespace(c) (c == '\0'\
 					  || c == ' '\
 					  || c == '\t')

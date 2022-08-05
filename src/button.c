@@ -20,19 +20,12 @@ CALLBACKRESULT defaultButtonHandler(CedarWidget *self, EVENT event, uint24_t par
 
 			if (((ButtonData *)self->data)->focused) {
 				// Draw focused
+				cedar_SetColors(cedar_colors.bg, cedar_colors.fg);
+
 				gfx_FillRectangle(pos->xmin, pos->ymin, GFX_REGION_WIDTH(*pos), GFX_REGION_HEIGHT(*pos));
-
-				gfx_SetTextFGColor(255);
-				gfx_SetTextBGColor(0);
-				gfx_SetTextTransparentColor(0);
-				gfx_SetTransparentColor(0);
-
 				cedar_wrapTextInBox(((ButtonData *)self->data)->text, pos->xmin+2, pos->ymin+2, GFX_REGION_WIDTH(*pos)-2, GFX_REGION_HEIGHT(*pos)-2);
 
-				gfx_SetTextFGColor(0);
-				gfx_SetTextBGColor(255);
-				gfx_SetTextTransparentColor(255);
-				gfx_SetTransparentColor(255);
+				cedar_SetColors(cedar_colors.fg, cedar_colors.bg);
 			} else {
 				// Draw unfocused
 				gfx_Rectangle(pos->xmin, pos->ymin, GFX_REGION_WIDTH(*pos), GFX_REGION_HEIGHT(*pos));

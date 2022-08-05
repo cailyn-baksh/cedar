@@ -6,6 +6,10 @@
 _cedar_Init:
 	push hl
 
+	; Configure timer (C will have better 32-bit asm generation than i can do)
+	call __cedar_ConfigTimer
+
+	; Init gfx
 	call _gfx_Begin
 
 	; gfx_SetDrawBuffer -> gfx_SetDraw(gfx_buffer) -> gfx_SetDraw(1)
@@ -36,8 +40,11 @@ _cedar_Cleanup:
 	call _gfx_End
 	ret
 
+; Externs
+	extern _cedar_colors
+
 	extern _gfx_Begin
 	extern _gfx_SetDraw
 	extern _gfx_SetTextConfig
-	; extern _gfx_SetTransparentColor  ; already extern'd by C code
+	extern _gfx_SetTransparentColor
 	extern _gfx_End

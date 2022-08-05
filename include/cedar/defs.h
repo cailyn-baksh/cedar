@@ -1,6 +1,10 @@
 #ifndef _LIBCEDAR_DEFS_H_
 #define _LIBCEDAR_DEFS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 #include <keypadc.h>
@@ -26,6 +30,12 @@ typedef struct CedarRect CedarRect;
 struct CedarEventHandler;
 typedef struct CedarEventHandler CedarEventHandler;
 
+struct CedarTimer;
+typedef struct CedarTimer CedarTimer;
+
+struct CedarColors;
+typedef struct CedarColors CedarColors;
+
 typedef uint24_t CALLBACKRESULT;
 typedef uint24_t EVENT;
 typedef uint24_t ID;
@@ -43,7 +53,7 @@ typedef CALLBACKRESULT CedarEventHandlerCallback(void *self, EVENT event, uint24
 #define EVENT_KEYDOWN				((EVENT)0x000006)
 #define EVENT_KEYUP					((EVENT)0x000007)
 #define EVENT_MENUSELECT			((EVENT)0x000008)
-#define EVENT_HOTKEY				((EVENT)0x000009)
+#define EVENT_HOTKEY				((EVENT)0x000009)		/* DEPRECATED */
 #define EVENT_TICK					((EVENT)0x00000A)
 #define EVENT_VSCROLL				((EVENT)0x00000B)
 #define EVENT_HSCROLL				((EVENT)0x00000C)
@@ -204,5 +214,21 @@ typedef CALLBACKRESULT CedarEventHandlerCallback(void *self, EVENT event, uint24
 #define CEDAR_KB_RESOL		CEDAR_KB_COS
 #define CEDAR_KB_FRAC		CEDAR_KB_TAN
 #define CEDAR_KB_ANNUL		CEDAR_KB_CLEAR
+
+
+#define MENUBAR_HEIGHT 20
+#define MENU_DROPDOWN_WIDTH 100
+#define MENU_DROPDOWN_HEIGHT (GFX_LCD_HEIGHT - MENUBAR_HEIGHT - 5)
+
+
+#define ATTR_FOCUSABLE			0x1
+
+// colors
+#define CEDAR_COLOR_BLACK	0x00
+#define CEDAR_COLOR_WHITE	0xFF
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // _LIBCEDAR_DEFS_H_
