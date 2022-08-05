@@ -13,6 +13,11 @@ CALLBACKRESULT defaultLabelHandler(CedarWidget *self, EVENT event, uint24_t para
 			// clean up label-specific data;
 			free(((LabelData *)self->data)->text);
 			break;
+		case EVENT_SETTEXT:
+			// Set the label's text
+			realloc(((LabelData *)self->data)->text, strlen((char *)param) * sizeof(char));
+			strcpy(((LabelData *)self->data)->text, (char *)param);
+			break;
 		case EVENT_PAINT:
 			// Paint widget
 		{

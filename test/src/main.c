@@ -1,6 +1,8 @@
 #include <cedar.h>
 #include <cedar/button.h>
+#include <cedar/checkbox.h>
 #include <cedar/label.h>
+#include <cedar/radio.h>
 
 #undef NDEBUG
 #include <debug.h>
@@ -13,12 +15,14 @@
 #define LABEL_ALPHABET		0x0102
 #define BUTTON_BUTTON		0x0103
 #define BUTTON_OFFSCREEN	0x0104
+#define CHECKBOX_CHK		0x0105
+#define TMR_TIMER			0x0106
+#define RAD_RADIO1			0x0107
+#define RAD_RADIO2			0x0108
+#define RAD_RADIO3			0x0109
 
 CALLBACKRESULT mainWindowEventHandler(CedarWindow *self, EVENT event, uint24_t param) {
 	switch (event) {
-		case EVENT_PAINT:
-			self->repaint = true;
-			break;
 		case EVENT_MENUSELECT:
 			if (param == MENUITEM_EXIT) {
 				return CALLBACK_EXIT;
@@ -34,6 +38,9 @@ CALLBACKRESULT mainWindowEventHandler(CedarWindow *self, EVENT event, uint24_t p
 					break;
 			}
 			break;
+		case EVENT_TICK:
+			dbg_printf("%d ticked\n", param);
+			break;
 	}
 
 	return CALLBACK_NORMAL;
@@ -46,6 +53,10 @@ int main() {
 	cedar_InitWindow(&window);
 
 	window.scrollMode = WINDOW_SCROLL_WIDGET;
+
+	cedar_colors.fg = 0xF0;
+	cedar_colors.bg = 0x00;
+	cedar_colors.alt = 0x1A;
 
 	// Add menu
 	CedarMenu menu;
@@ -64,6 +75,15 @@ int main() {
 
 	cedar_AddWidget(&window, CedarButton(BUTTON_BUTTON, 40, 180, 60, 20, "Button!"));
 	cedar_AddWidget(&window, CedarButton(BUTTON_OFFSCREEN, 420, 80, 50, 20, "btn2"));
+
+	cedar_AddWidget(&window, CedarCheckbox(CHECKBOX_CHK, 180, 80));
+
+	uint24_t radioSelection = 0;
+	cedar_AddWidget(&window, CedarRadioButton(RAD_RADIO1, 10, 40, &radioSelection));
+	cedar_AddWidget(&window, CedarRadioButton(RAD_RADIO2, 10, 55, &radioSelection));
+	cedar_AddWidget(&window, CedarRadioButton(RAD_RADIO3, 10, 70, &radioSelection));
+
+	cedar_AddTimer(&window, TMR_TIMER, 1000);
 
 	cedar_RegisterEventHandler(window.handlers, mainWindowEventHandler);
 
