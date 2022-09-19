@@ -41,7 +41,7 @@ LINK = ez80-link
 FASMG = fasmg
 CONVIMG = convimg
 LINKASM = ./tools/linkasm.pl
-NATIVEPATH ?= $(subst \,/,$1) $1
+NATIVEPATH ?= $(subst \,/,$1)
 QUOTE_ARG = '$(subst ','\'',$1)'#'
 RM = rm -f $(call NATIVEPATH,$1)
 RMDIR = rm -rf $(call NATIVEPATH,$1)
@@ -79,7 +79,7 @@ $(OUTDIR)/assets.ll: assets $(ASSETS)
 
 assets:
 	$(Q)$(call MKDIR,assets/generated)
-	(cd assets && $(Q)$(CONVIMG) && cd ..)
+	(cd assets && $(CONVIMG) && cd ..)
 
 $(OUTDIR)/assets/%.c.ll: assets/generated/%.c
 	@echo [compiling] $(call NATIVEPATH,$<) $(ARROW) $(call NATIVEPATH,$@)
@@ -87,7 +87,7 @@ $(OUTDIR)/assets/%.c.ll: assets/generated/%.c
 
 clean:
 	$(Q)$(call RMDIR,$(OUTDIR))
-	(cd assets && $(Q)$(CONVIMG) --clean && cd ..)
+	(cd assets && $(CONVIMG) --clean && cd ..)
 	$(MAKE) -C test clean
 
 rebuild: clean all

@@ -5,3 +5,7 @@ bin/
 obj/
 assets/generated
 convimg.out
+
+.clangd
+compile_commands.json
+.cache/
