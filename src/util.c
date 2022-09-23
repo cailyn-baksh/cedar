@@ -1,6 +1,9 @@
 #include <cedar.h>
 #include <cedar/utils.h>
 
+// Subscript a vector
+#define VecIndex(vec, index) (*(vec->items + ((index) * vec->_elem_size)))
+
 void cdr_VecReserve(CdrVector *vec, size_t size) {
 	// Ensure size is valid
 	if (size < vec->length) {
@@ -23,7 +26,7 @@ void cdr_VecPushBack(CdrVector *vec, void *item) {
 	}
 
 	// vec->items[vec->length - 1] = item;
-	*(vec->items + ((vec->length - 1) * vec->_elem_size)) = item
+	VecIndex(vec, vec->length - 1) = item;
 }
 
 void cdr_VecInsert(CdrVector *vec, size_t index, void *item) {
@@ -39,15 +42,15 @@ void cdr_VecInsert(CdrVector *vec, size_t index, void *item) {
 	// start from vec->length-1 since we havent added the last item yet
 	for (size_t i=vec->length-1; i >= index; --i) {
 		// vec->items[i+1] = vec->items[i];
-		*(vec->items + ((i+1) * vec->_elem_size)) = *(vec->items + (i * vec->_elem_size));
+		VecIndex(vec, i+1) = VecIndex(vec, i);
 	}
 
 	// vec->items[index] = item;
-	*(vec->items + (index * vec->_elem_size)) = item;
+	VecIndex(vec, index) = item;
 }
 
 void *cdr_VecGet(CdrVector *vec, size_t index) {
-	return *(vec->items + (index * vec->_elem_size));
+	return VecIndex(vec, index);
 }
 
 void cdr
