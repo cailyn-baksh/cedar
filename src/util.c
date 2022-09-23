@@ -1,3 +1,6 @@
+#include <stdint.h>
+#include <stdlib.h>
+
 #include <cedar.h>
 #include <cedar/utils.h>
 
@@ -13,10 +16,10 @@ void cdr_VecReserve(CdrVector *vec, size_t size) {
 	}
 
 	vec->_alloc = size;
-	vec->items = realloc(vec->items, vec->_alloc);
+	vec->items = realloc(vec->items, vec->_alloc * vec->_elem_size);
 }
 
-void cdr_VecPushBack(CdrVector *vec, void *item) {
+void cdr_VecPushBack(CdrVector *vec, ...) {
 	vec->length += 1;
 
 	// Resize if necessary
@@ -25,11 +28,18 @@ void cdr_VecPushBack(CdrVector *vec, void *item) {
 		vec->items = realloc(vec->items, vec->_alloc * vec->_elem_size);
 	}
 
-	// vec->items[vec->length - 1] = item;
-	VecIndex(vec, vec->length - 1) = item;
+	// Get item
+	va_list args;
+	va_start(args, vec);
+	uint8_t item[vec->_elem_size] = va_arg(args, uint8_t[vec->_elem_size]);
+
+	// Store item in vector
+	memcpy(&VecIndex(vec, vec->length - 1), item, vec->_elem_size);
+
+	va_end(args);
 }
 
-void cdr_VecInsert(CdrVector *vec, size_t index, void *item) {
+void cdr_VecInsert(CdrVector *vec, size_t index, ...) {
 	vec->length += 1;
 
 	// Resize if necessary
@@ -45,12 +55,19 @@ void cdr_VecInsert(CdrVector *vec, size_t index, void *item) {
 		VecIndex(vec, i+1) = VecIndex(vec, i);
 	}
 
-	// vec->items[index] = item;
-	VecIndex(vec, index) = item;
+	// Get item
+	va_list args;
+	va_start(args, index);
+	uint8_t item[vec->_elem_size] = va_arg(args, uint8_t[vec->_elem_size]);
+
+	// Store item in vector
+	memcpy(&VecIndex(vec, index), item, vec->_elem_size);
+
+	va_end(args);
 }
 
-void *cdr_VecGet(CdrVector *vec, size_t index) {
-	return VecIndex(vec, index);
+void **cdr_VecGet(CdrVector *vec, size_t index) {
+	return &VecIndex(vec, index);
 }
 
 void cdr

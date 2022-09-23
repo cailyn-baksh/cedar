@@ -54,12 +54,14 @@ void cdr_VecReserve(CdrVector *vec, size_t size);
 #define CDR_VECTOR_RESERVE_MIN 0
 
 /*
- * Push a new item onto the end of the vector
+ * Push a new item onto the end of the vector. This function takes two
+ * arguments: the first one is named (vec), and the second is a variadic
+ * argument (here called 'item').
  *
  * vec			The vector to push onto
  * item			The item to push onto the vector
  */
-void cdr_VecPushBack(CdrVector *vec, void *item);
+void cdr_VecPushBack(CdrVector *vec, ...);
 
 /*
  * Insert a new item into the vector
@@ -68,16 +70,16 @@ void cdr_VecPushBack(CdrVector *vec, void *item);
  * index		The index to insert at
  * item			The item to insert into the vector
  */
-void cdr_VecInsert(CdrVector *vec, size_t index, void *item);
+void cdr_VecInsert(CdrVector *vec, size_t index, ...);
 
 /*
  * Gets an item from the vector
  *
  * vec			The vector to get the item from
  * index		The index of the item to get
- * Returns the item at the specified index.
+ * Returns a pointer to the item at the specified index.
  */
-void *cdr_VecGet(CdrVector *vec, size_t index);
+void **cdr_VecGet(CdrVector *vec, size_t index);
 
 /*
  * Removes an item from the vector
