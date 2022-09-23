@@ -52,7 +52,7 @@ void cdr_VecInsert(CdrVector *vec, size_t index, ...) {
 	// start from vec->length-1 since we havent added the last item yet
 	for (size_t i=vec->length-1; i >= index; --i) {
 		// vec->items[i+1] = vec->items[i];
-		VecIndex(vec, i+1) = VecIndex(vec, i);
+		memcpy(&VecIndex(vec, i+1), &VecIndex(vec, i), vec->_elem_size);
 	}
 
 	// Get item
@@ -70,5 +70,18 @@ void **cdr_VecGet(CdrVector *vec, size_t index) {
 	return &VecIndex(vec, index);
 }
 
-void cdr
+void cdr_VecRemove(CdrVector *vec, size_t index) {
+	// Overwrite the item
+	// the memcpy is in a loop to ensure that src and dest do not overlap
+	// not using memmove bc memmove copies into a temp buffer first
+	for (size_t i=index; i < vec->length-1; ++i) {
+		memcpy(&VecIndex(vec, i), &VecIndex(vec, i+1), vec->_elem_size);
+	}
+
+	vec->length -= 1;
+}
+
+void cdr_VecFree(CdrVector *vec) {
+	free(vec->items);
+}
 
